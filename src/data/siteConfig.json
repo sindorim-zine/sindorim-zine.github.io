@@ -21,6 +21,9 @@
   "heroSubtitle": "신도림에 사는 이웃들이 함께 만드는 모임, 행사, 생활 정보를 차곡차곡 기록합니다. 실제 대화와 댓글은 네이버 카페에서 이어집니다. 신도림종합정보/기부봉사/신커봉사단/교육,문화,맛집,플리마켓/더링크/테크노/구로/영등포/문래/목동/신커",
   "heroImage": "/images/hero-default.svg",
   "cafeUrl": "https://cafe.naver.com/wooseongapt",
+  "searchVerification": {
+    "google": "google-site-verification: googledce5aa01442ce970.html"
+  },
   "categories": [
     "공지사항",
     "모임·행사",
@@ -42,10 +45,5 @@
       "url": "/about"
     }
   ],
-  "footerText": "이 사이트는 네이버 카페 '신도림 커뮤니티'의 주요 소식을 정리한 공식 웹 아카이브입니다. 회원 활동과 댓글은 네이버 카페에서 함께해 주세요.",
-  "searchVerification": {
-    "google": "",
-    "naver": "",
-    "bing": ""
-  }
+  "footerText": "이 사이트는 네이버 카페 '신도림 커뮤니티'의 주요 소식을 정리한 공식 웹 아카이브입니다. 회원 활동과 댓글은 네이버 카페에서 함께해 주세요."
 }
