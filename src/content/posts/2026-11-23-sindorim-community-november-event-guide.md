@@ -9,7 +9,7 @@ category: "모임·행사"
 summary: "신도림 커뮤니티에서 11월 16일부터 30일까지 게시글과 댓글 참여를 통한 착한기여도 이벤트를 진행합니다. 매일 조회수, 좋아요, 댓글 수 1위 참여자에게 닭갈비, 커피, 버거 등 다양한 지역 매장 경품을 증정합니다. 11월 16일부터 25일까지 10일간 매일 게시글과 댓글을 모두 작성한 회원에게는 씨네큐 관람권을 지급하는 개근 이벤트도 마련되어 있습니다."
 pinned: false
 draft: false
-thumbnail: "/images/uploads/cafe/00bed541e97b7775.png"
+thumbnail: "/images/uploads/cafe/00bed541e97b7775.jpg"
 originalUrl: "https://cafe.naver.com/wooseongapt/551315"
 ---
 
@@ -39,6 +39,6 @@ originalUrl: "https://cafe.naver.com/wooseongapt/551315"
 
 이벤트 안내를 확인하신 후 댓글로 "숙지 완료! 💚"를 남겨주시는 회원분들을 대상으로 노모어피자 신도림점 반반피자(R) 및 오븐스파게티 추첨 이벤트도 함께 진행됩니다.
 
-![사진 4](/images/uploads/cafe/00bed541e97b7775.png)
+![사진 4](/images/uploads/cafe/00bed541e97b7775.jpg)
 
 자세한 내용은 [네이버 카페 원문](https://cafe.naver.com/wooseongapt/551315)에서 확인하실 수 있습니다.

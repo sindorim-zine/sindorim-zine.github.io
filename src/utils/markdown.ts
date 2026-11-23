@@ -1,5 +1,5 @@
 // AI 크롤러용 순수 마크다운 생성기 (llms.txt, llms-full.txt, about.md, posts/[id].md)
-import { about, eventOf, formatDate, formatEvent, siteConfig, type Post } from './site';
+import { about, compareNewest, eventOf, formatDate, formatEvent, siteConfig, todayKst, type Post } from './site';
 import { absoluteUrl, isHttpUrl, postMarkdownPath, postPath } from './url';
 
 type Site = URL | string | undefined;
@@ -127,4 +127,40 @@ export function markdownResponse(body: string, contentType = 'text/markdown; cha
   return new Response(body.replace(/\n{3,}/g, '\n\n').trimEnd() + '\n', {
     headers: { 'Content-Type': contentType },
   });
+}
+
+/** 진행 중이거나 다가오는 행사 (가까운 날짜부터). 매일 아침 자동 빌드로 '오늘' 기준이 갱신됩니다. */
+export function upcomingEvents(posts: Post[], limit = 20): Post[] {
+  const today = todayKst();
+  return posts
+    .filter((p) => {
+      const e = eventOf(p);
+      return e && e.end >= today;
+    })
+    .sort((a, b) => eventOf(a)!.start.localeCompare(eventOf(b)!.start) || compareNewest(a, b))
+    .slice(0, limit);
+}
+
+/** '다가오는 행사' 목록 줄 */
+export function eventLine(post: Post, site: Site): string {
+  const e = eventOf(post)!;
+  const range = e.end !== e.start ? `${e.start} ~ ${e.end}` : e.start;
+  return `- ${range} · ${e.label}: [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)})`;
+}
+
+/** 전체 글 목록 마크다운 (월별, 한 줄씩) */
+export function archiveMarkdown(posts: Post[], site: Site): string {
+  const sorted = [...posts].sort(compareNewest);
+  const lines = [`# ${siteConfig.siteTitle} 전체 글 목록`, '', `> 총 ${sorted.length}개의 글. 각 링크는 글 본문 마크다운입니다. 웹 페이지: ${absoluteUrl('/archive/', site)}`, ''];
+  let month = '';
+  for (const post of sorted) {
+    const key = new Date(post.data.pubDate.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 7);
+    if (key !== month) {
+      month = key;
+      const [y, m] = key.split('-');
+      lines.push('', `## ${y}년 ${Number(m)}월`, '');
+    }
+    lines.push(postLinkLine(post, site));
+  }
+  return lines.join('\n');
 }

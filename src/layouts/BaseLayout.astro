@@ -113,7 +113,9 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
       (function () {
         var today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
         function days(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 86400000); }
-        document.querySelectorAll('[data-event-line]').forEach(function (el) {
+        // '더 보기'로 새로 그린 카드에도 다시 쓸 수 있게 전역 함수로 둡니다.
+        window.sindorimFillDday = function (root) {
+        (root || document).querySelectorAll('[data-event-line]').forEach(function (el) {
           var start = el.getAttribute('data-start'), end = el.getAttribute('data-end') || start;
           var badge = el.querySelector('[data-dday]');
           if (!start || !badge) return;
@@ -125,6 +127,8 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
           badge.hidden = false;
           el.setAttribute('data-state', state);
         });
+        };
+        window.sindorimFillDday(document);
       })();
     </script>
   </body>

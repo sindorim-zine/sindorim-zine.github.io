@@ -8,7 +8,7 @@ category: "모임·행사"
 summary: "제10회 꿈꾸는 미술가 공모전이 '어린이가 행복한 세상'을 주제로 개최되며 유치원생부터 어르신까지 참여할 수 있습니다. 이번 공모전에는 초록우산, 서울남부교육지원청, (주)미술로, 신커봉사단이 함께 참여합니다. 온라인 그림 접수는 12월 7일 18시까지 네이버 폼을 통해 신청할 수 있습니다."
 pinned: false
 draft: false
-thumbnail: "/images/uploads/cafe/b228a9b85ea2abb8.png"
+thumbnail: "/images/uploads/cafe/b228a9b85ea2abb8.jpg"
 originalUrl: "https://cafe.naver.com/wooseongapt/551356"
 ---
 
@@ -27,4 +27,4 @@ originalUrl: "https://cafe.naver.com/wooseongapt/551356"
 - [🎨제10회 꿈꾸는 미술가 공모전 참가신청서 - 네이버 폼](https://form.naver.com/response/3kfZIV147O0)
 - [카카오톡채널 - 제10회 꿈꾸는 미술가 공모전](https://pf.kakao.com/_rWRxeX)
 
-![사진 2](/images/uploads/cafe/b228a9b85ea2abb8.png)
+![사진 2](/images/uploads/cafe/b228a9b85ea2abb8.jpg)

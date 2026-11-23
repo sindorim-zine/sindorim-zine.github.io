@@ -9,16 +9,23 @@ import { SORT_OPTIONS, collectCategories, eventOf, formatDate, getPublishedPosts
 import { organizationSchema, websiteSchema } from '../utils/schema';
 import { postPath, withBase } from '../utils/url';
 
+// 메인 화면에 처음 보여 줄 글 수. 나머지는 '더 보기'를 누르면 feed.json에서 불러와 이어 붙입니다.
+// (글이 수천 개가 되어도 첫 화면은 항상 가볍게 유지)
+const PAGE_SIZE = Number(process.env.FEED_PAGE_SIZE) > 0 ? Number(process.env.FEED_PAGE_SIZE) : 24;
+
 const { defaultViewMode, defaultSort } = siteConfig.design;
 const posts = await getPublishedPosts();
 const pinned = posts.filter((p) => p.data.pinned);
 // 운영자가 정한 기본 정렬로 미리 정렬해 둡니다(방문자가 바꾸면 화면에서 다시 정렬).
 const feed = sortPosts(posts.filter((p) => !p.data.pinned), defaultSort);
+const firstPage = feed.slice(0, PAGE_SIZE);
 const categories = collectCategories(feed);
 const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
 // 운영자가 기본 정렬을 바꾸면 키도 바뀌어, 기존 방문자에게도 새 기본 정렬이 먼저 적용됩니다.
 const sortStorageKey = `sindorim-sort-pref-${defaultSort}`;
 const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', oldest: '처음부터 보는 소식', title: '제목순 소식' };
+const illustrationVariants = ['notice', 'meetup', 'local', 'life', 'food'] as const;
+const feedUrl = withBase('/feed.json');
 ---
 <BaseLayout jsonLd={[organizationSchema(Astro.site), websiteSchema(Astro.site)]}>
   <Hero />
@@ -98,8 +105,8 @@ const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', ol
     )}
 
     {feed.length > 0 ? (
-      <ul class="feed" id="feed">
-        {feed.map((post, index) => <PostCard post={post} eager={index < 3} />)}
+      <ul class="feed" id="feed" data-total={feed.length} data-page-size={PAGE_SIZE} data-feed-url={feedUrl}>
+        {firstPage.map((post, index) => <PostCard post={post} eager={index < 3} />)}
       </ul>
     ) : (
       <div class="card flex flex-col items-center gap-3 p-10 text-center">
@@ -113,98 +120,234 @@ const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', ol
       </div>
     )}
     <p id="feed-empty" class="card hidden p-8 text-center text-muted">이 카테고리에는 아직 글이 없습니다.</p>
+
+    {feed.length > 0 && (
+      <div class="mt-8 flex flex-col items-center gap-3">
+        <button type="button" id="feed-more" class="btn btn-ghost" hidden={feed.length <= PAGE_SIZE}>
+          소식 더 보기 <span class="text-muted" data-more-count>({feed.length - firstPage.length}개 남음)</span>
+        </button>
+        <a href={withBase('/archive/')} class="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
+          전체 글 목록 한눈에 보기 <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+    )}
   </section>
+
+  <!-- '더 보기'로 불러온 글을 그릴 때 쓰는 카드 틀 (PostCard와 같은 모양) -->
+  <template id="feed-card-template">
+    <li class="feed-item">
+      <a class="feed-card card group" data-slot="link">
+        <div class="feed-media" data-slot="media"></div>
+        <div class="feed-body">
+          <div class="flex flex-wrap items-center gap-1.5"><span class="chip" data-slot="category"></span></div>
+          <h3 class="feed-title" data-slot="title"></h3>
+          <p class="event-line" data-event-line data-slot="event" hidden>
+            <Icon name="calendar" size={13} />
+            <time data-slot="event-text"></time>
+            <span class="event-dday" data-dday hidden></span>
+          </p>
+          <p class="feed-summary" data-slot="summary"></p>
+          <p class="feed-meta"><Icon name="calendar" size={13} /><time data-slot="date"></time></p>
+        </div>
+      </a>
+    </li>
+  </template>
+  {illustrationVariants.map((variant) => (
+    <template id={`illustration-${variant}`}><Illustration variant={variant} /></template>
+  ))}
 
   <script is:inline define:vars={{ viewStorageKey, sortStorageKey, defaultSort }}>
     (function () {
-      // ── 정렬: 최신순 / 오래된순 / 제목순 ──────────────────────────────
       var feedEl = document.getElementById('feed');
       var select = document.querySelector('[data-sort-select]');
       var heading = document.getElementById('feed-title');
+      var moreBtn = document.getElementById('feed-more');
+      var empty = document.getElementById('feed-empty');
+      var tabs = document.querySelectorAll('[data-category-tab]');
       var headings = {};
       try { headings = JSON.parse(heading.getAttribute('data-sort-headings') || '{}'); } catch (e) {}
-      function num(el, key) { return Number(el.getAttribute(key)) || 0; }
-      function newest(a, b) {
-        return (num(b, 'data-date') - num(a, 'data-date')) ||
-          (num(b, 'data-published') - num(a, 'data-published')) ||
-          (b.getAttribute('data-id') || '').localeCompare(a.getAttribute('data-id') || '');
-      }
-      // 다가오는 행사순: 진행 중·다가오는 행사(가까운 날짜부터) → 지난 행사(최근 종료부터) → 행사 없는 글(최신순)
-      var today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
-      function eventGroup(el) {
-        var end = el.getAttribute('data-event-end');
-        if (!end) return 2;
-        return end >= today ? 0 : 1;
-      }
-      function byEvent(a, b) {
-        var ga = eventGroup(a), gb = eventGroup(b);
-        if (ga !== gb) return ga - gb;
-        var sa = a.getAttribute('data-event-start') || '', sb = b.getAttribute('data-event-start') || '';
-        var ea = a.getAttribute('data-event-end') || '', eb = b.getAttribute('data-event-end') || '';
-        if (ga === 0) return sa.localeCompare(sb) || ea.localeCompare(eb) || newest(a, b);
-        if (ga === 1) return eb.localeCompare(ea) || newest(a, b);
-        return newest(a, b);
-      }
-      var comparators = {
-        newest: newest,
-        event: byEvent,
-        oldest: function (a, b) { return newest(b, a); },
-        title: function (a, b) {
-          return (a.getAttribute('data-title') || '').localeCompare(b.getAttribute('data-title') || '', 'ko') || newest(a, b);
-        }
-      };
-      function applySort(mode) {
-        if (!feedEl || !comparators[mode]) return;
-        var list = Array.prototype.slice.call(feedEl.children);
-        list.sort(comparators[mode]).forEach(function (li) { feedEl.appendChild(li); });
-        if (select) select.value = mode;
-        if (heading && headings[mode]) heading.textContent = headings[mode];
-      }
-      var savedSort = null;
-      try { savedSort = localStorage.getItem(sortStorageKey); } catch (e) {}
-      // 행사순은 오늘 날짜에 따라 순서가 바뀌므로, 기본값이어도 방문 시점 기준으로 다시 정렬합니다.
-      if (savedSort && comparators[savedSort] && (savedSort !== defaultSort || savedSort === 'event')) applySort(savedSort);
-      else if (defaultSort === 'event') applySort('event');
-      if (select) {
-        select.addEventListener('change', function () {
-          applySort(select.value);
-          try { localStorage.setItem(sortStorageKey, select.value); } catch (e) {}
-        });
-      }
 
       // ── 보기 방식: 그리드 / 리스트 ─────────────────────────────────────
       var root = document.documentElement;
-      var buttons = document.querySelectorAll('[data-view-btn]');
-      function sync() {
+      var viewButtons = document.querySelectorAll('[data-view-btn]');
+      function syncView() {
         var mode = root.getAttribute('data-view');
-        buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-view-btn') === mode)); });
+        viewButtons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-view-btn') === mode)); });
       }
-      buttons.forEach(function (b) {
+      viewButtons.forEach(function (b) {
         b.addEventListener('click', function () {
           var mode = b.getAttribute('data-view-btn');
           root.setAttribute('data-view', mode);
           try { localStorage.setItem(viewStorageKey, mode); } catch (e) {}
-          sync();
+          syncView();
         });
       });
-      sync();
+      syncView();
 
-      var tabs = document.querySelectorAll('[data-category-tab]');
-      var items = document.querySelectorAll('#feed .feed-item');
-      var empty = document.getElementById('feed-empty');
+      if (!feedEl) return;
+
+      // ── 목록 상태 ─────────────────────────────────────────────────────
+      var total = Number(feedEl.getAttribute('data-total')) || 0;
+      var pageSize = Number(feedEl.getAttribute('data-page-size')) || 24;
+      var feedUrl = feedEl.getAttribute('data-feed-url');
+      var state = { sort: defaultSort, category: '', limit: pageSize };
+      // 처음 화면에 그려진 카드로 목록을 시작하고, 전체가 필요할 때 feed.json을 한 번만 받습니다.
+      var items = Array.prototype.map.call(feedEl.children, function (el) {
+        return {
+          id: el.getAttribute('data-id'),
+          title: el.getAttribute('data-title') || '',
+          category: el.getAttribute('data-category') || '',
+          date: Number(el.getAttribute('data-date')) || 0,
+          published: Number(el.getAttribute('data-published')) || 0,
+          eventStart: el.getAttribute('data-event-start') || '',
+          eventEnd: el.getAttribute('data-event-end') || '',
+          el: el
+        };
+      });
+      var allLoaded = items.length >= total;
+      var loading = null;
+
+      function loadAll() {
+        if (allLoaded) return Promise.resolve();
+        if (loading) return loading;
+        loading = fetch(feedUrl, { cache: 'no-cache' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var byId = {};
+            items.forEach(function (it) { byId[it.id] = it; });
+            items = data.items.map(function (d) {
+              var existing = byId[d.id];
+              return {
+                id: d.id, title: d.title, category: d.category, date: d.date, published: d.published,
+                eventStart: d.event ? d.event.start : '', eventEnd: d.event ? d.event.end : '',
+                el: existing ? existing.el : null, data: d
+              };
+            });
+            allLoaded = true;
+          })
+          .catch(function () { loading = null; });
+        return loading;
+      }
+
+      // ── 카드 만들기 ('더 보기'로 불러온 글) ───────────────────────────
+      var cardTpl = document.getElementById('feed-card-template');
+      function buildCard(d) {
+        var li = cardTpl.content.firstElementChild.cloneNode(true);
+        li.setAttribute('data-id', d.id);
+        li.setAttribute('data-category', d.category);
+        li.setAttribute('data-title', d.title);
+        li.setAttribute('data-date', d.date);
+        li.setAttribute('data-published', d.published);
+        if (d.event) { li.setAttribute('data-event-start', d.event.start); li.setAttribute('data-event-end', d.event.end); }
+        li.querySelector('[data-slot="link"]').href = d.url;
+        var media = li.querySelector('[data-slot="media"]');
+        if (d.thumb) {
+          var img = document.createElement('img');
+          img.src = d.thumb; img.alt = ''; img.width = 400; img.height = 500; img.loading = 'lazy'; img.decoding = 'async';
+          media.appendChild(img);
+        } else {
+          var tpl = document.getElementById('illustration-' + d.illustration) || document.getElementById('illustration-local');
+          if (tpl) media.appendChild(tpl.content.firstElementChild.cloneNode(true));
+        }
+        li.querySelector('[data-slot="category"]').textContent = d.category;
+        li.querySelector('[data-slot="title"]').textContent = d.title;
+        var summary = li.querySelector('[data-slot="summary"]');
+        if (d.summary) summary.textContent = d.summary; else summary.remove();
+        var dateEl = li.querySelector('[data-slot="date"]');
+        dateEl.textContent = d.dateLabel; dateEl.setAttribute('datetime', d.dateIso);
+        var ev = li.querySelector('[data-slot="event"]');
+        if (d.event) {
+          ev.hidden = false;
+          ev.setAttribute('data-start', d.event.start);
+          ev.setAttribute('data-end', d.event.end);
+          var t = ev.querySelector('[data-slot="event-text"]');
+          t.textContent = d.event.text; t.setAttribute('datetime', d.event.start);
+        } else {
+          ev.remove();
+        }
+        return li;
+      }
+
+      // ── 정렬 ──────────────────────────────────────────────────────────
+      var today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+      function newest(a, b) { return (b.date - a.date) || (b.published - a.published) || (b.id || '').localeCompare(a.id || ''); }
+      function eventGroup(it) { return !it.eventEnd ? 2 : (it.eventEnd >= today ? 0 : 1); }
+      var comparators = {
+        newest: newest,
+        event: function (a, b) {
+          var ga = eventGroup(a), gb = eventGroup(b);
+          if (ga !== gb) return ga - gb;
+          if (ga === 0) return a.eventStart.localeCompare(b.eventStart) || a.eventEnd.localeCompare(b.eventEnd) || newest(a, b);
+          if (ga === 1) return b.eventEnd.localeCompare(a.eventEnd) || newest(a, b);
+          return newest(a, b);
+        },
+        oldest: function (a, b) { return newest(b, a); },
+        title: function (a, b) { return a.title.localeCompare(b.title, 'ko') || newest(a, b); }
+      };
+
+      // ── 화면 그리기: 정렬 → 카테고리 → 앞에서부터 limit개 ──────────────
+      function render() {
+        var list = items.filter(function (it) { return !state.category || it.category === state.category; });
+        list.sort(comparators[state.sort] || newest);
+        var shown = list.slice(0, state.limit);
+        var frag = document.createDocumentFragment();
+        shown.forEach(function (it) {
+          if (!it.el && it.data) it.el = buildCard(it.data);
+          if (it.el) { it.el.hidden = false; frag.appendChild(it.el); }
+        });
+        feedEl.replaceChildren(frag);
+        if (window.sindorimFillDday) window.sindorimFillDday(feedEl);
+        // 아직 전부 받지 않았다면 남은 수는 전체 개수 기준으로 안내
+        var matchingTotal = allLoaded ? list.length : (state.category ? list.length : total);
+        var remaining = Math.max(0, matchingTotal - shown.length);
+        if (moreBtn) {
+          moreBtn.hidden = remaining === 0;
+          var count = moreBtn.querySelector('[data-more-count]');
+          if (count) count.textContent = '(' + remaining + '개 남음)';
+        }
+        if (empty) empty.classList.toggle('hidden', shown.length > 0 || total === 0);
+        if (select) select.value = state.sort;
+        if (heading && headings[state.sort]) heading.textContent = headings[state.sort];
+      }
+
+      // 정렬·카테고리를 바꾸면 전체 글 기준으로 다시 골라야 하므로 필요할 때 전체 목록을 받습니다.
+      function update(change) {
+        Object.assign(state, change);
+        if (allLoaded) return render();
+        render();
+        loadAll().then(render);
+      }
+
+      if (moreBtn) {
+        moreBtn.addEventListener('click', function () {
+          moreBtn.disabled = true;
+          loadAll().then(function () {
+            state.limit += pageSize;
+            render();
+            moreBtn.disabled = false;
+          });
+        });
+      }
+
+      if (select) {
+        select.addEventListener('change', function () {
+          try { localStorage.setItem(sortStorageKey, select.value); } catch (e) {}
+          update({ sort: select.value, limit: pageSize });
+        });
+      }
+
       tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
-          var selected = tab.getAttribute('data-category-tab');
-          var visible = 0;
           tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
-          items.forEach(function (item) {
-            var show = !selected || item.getAttribute('data-category') === selected;
-            item.hidden = !show;
-            if (show) visible++;
-          });
-          if (empty) empty.classList.toggle('hidden', visible > 0 || items.length === 0);
+          update({ category: tab.getAttribute('data-category-tab') || '', limit: pageSize });
         });
       });
+
+      // 방문자가 전에 고른 정렬(또는 날짜에 따라 달라지는 행사순)을 적용
+      var savedSort = null;
+      try { savedSort = localStorage.getItem(sortStorageKey); } catch (e) {}
+      if (savedSort && comparators[savedSort] && (savedSort !== defaultSort || savedSort === 'event')) update({ sort: savedSort });
+      else if (defaultSort === 'event') update({ sort: 'event' });
     })();
   </script>
 </BaseLayout>

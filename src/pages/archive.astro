@@ -1,0 +1,81 @@
+---
+// 전체 글 목록 (월별). 사진 없이 제목만 보여 주는 가벼운 페이지라 글이 수천 개여도 빠릅니다.
+// 메인 화면은 최근 글만 보여 주므로, 예전 글을 찾거나 검색엔진·AI가 모든 글을 발견하는 통로가 됩니다.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { compareNewest, eventOf, formatEvent, getPublishedPosts, siteConfig } from '../utils/site';
+import { breadcrumbSchema } from '../utils/schema';
+import { postPath, withBase } from '../utils/url';
+
+const posts = (await getPublishedPosts()).sort(compareNewest);
+
+// 한국 시간 기준 'YYYY-MM'으로 묶기
+const monthKey = (d: Date) => new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 7);
+const groups = new Map<string, typeof posts>();
+for (const post of posts) {
+  const key = monthKey(post.data.pubDate);
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key)!.push(post);
+}
+const months = [...groups.entries()];
+const monthLabel = (key: string) => {
+  const [y, m] = key.split('-');
+  return `${y}년 ${Number(m)}월`;
+};
+const dayLabel = (d: Date) => {
+  const kst = new Date(d.getTime() + 9 * 3600 * 1000);
+  return `${kst.getUTCMonth() + 1}.${String(kst.getUTCDate()).padStart(2, '0')}`;
+};
+---
+<BaseLayout
+  title="전체 글 목록"
+  description={`${siteConfig.siteTitle}에 올라온 모든 소식을 월별로 모아 보는 목록입니다. 총 ${posts.length}개의 글이 있습니다.`}
+  markdownPath="/archive.md"
+  jsonLd={[breadcrumbSchema([{ name: '홈', path: '/' }, { name: '전체 글 목록', path: '/archive/' }], Astro.site)]}
+>
+  <section class="container-prose pb-6 pt-14 md:pt-20">
+    <p class="eyebrow mb-3">Archive</p>
+    <h1 class="text-3xl font-bold sm:text-4xl">전체 글 목록</h1>
+    <p class="mt-4 text-muted">지금까지 올라온 소식 <strong class="text-ink">{posts.length}개</strong>를 월별로 모았습니다. 원하는 글을 찾을 때는 오른쪽 위 검색(🔍)도 이용해 보세요.</p>
+
+    {months.length > 1 && (
+      <nav class="mt-6 flex flex-wrap gap-2" aria-label="월 바로가기">
+        {months.map(([key, list]) => (
+          <a href={`#m-${key}`} class="chip hover:opacity-80">{monthLabel(key)} <span class="opacity-70">{list.length}</span></a>
+        ))}
+      </nav>
+    )}
+  </section>
+
+  <section class="container-prose" aria-label="월별 글 목록">
+    {months.length === 0 && <p class="card p-8 text-center text-muted">아직 글이 없습니다.</p>}
+    {months.map(([key, list]) => (
+      <div class="mb-10" id={`m-${key}`}>
+        <h2 class="section-title mb-3 border-b border-line pb-2">{monthLabel(key)} <span class="text-sm font-normal text-muted">{list.length}개</span></h2>
+        <ul class="divide-y divide-[var(--border-color)]">
+          {list.map((post) => {
+            const event = eventOf(post);
+            return (
+              <li>
+                <a href={withBase(postPath(post.id))} class="group flex items-baseline gap-3 py-3">
+                  <time class="w-11 shrink-0 text-sm tabular-nums text-muted" datetime={post.data.pubDate.toISOString()}>{dayLabel(post.data.pubDate)}</time>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex flex-wrap items-center gap-1.5">
+                      {post.data.pinned && <span class="chip chip-pinned"><Icon name="pin" size={11} />중요</span>}
+                      <span class="chip">{post.data.category}</span>
+                    </span>
+                    <span class="mt-1 block font-heading font-bold leading-snug group-hover:text-accent">{post.data.title}</span>
+                    {event && <span class="mt-0.5 block text-xs text-muted">📅 {formatEvent(event)}</span>}
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
+    <p class="mt-4 text-center">
+      <a href={withBase('/')} class="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">← 홈으로</a>
+    </p>
+  </section>
+</BaseLayout>

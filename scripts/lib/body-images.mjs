@@ -6,6 +6,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { optimizeImage } from './image-optimize.mjs';
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
@@ -112,7 +113,15 @@ async function downloadOne(url, uploadDir, publicPrefix) {
   }
 
   if (buffer.length < 100 || buffer.length > MAX_BYTES) throw new Error(`크기 비정상 (${buffer.length} bytes)`);
+  // 대표 사진 선택용 크기는 압축 전 원본 기준(사진다운 사진인지 판단), 저장은 압축본으로
   lastSize = buffer.length;
+  try {
+    const optimized = await optimizeImage(buffer, ext);
+    buffer = optimized.buffer;
+    ext = optimized.ext || ext;
+  } catch {
+    // 압축 실패 시 원본 저장
+  }
   const name = `${createHash('sha1').update(buffer).digest('hex').slice(0, 16)}.${ext}`;
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, name), buffer);

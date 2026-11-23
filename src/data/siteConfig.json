@@ -34,6 +34,10 @@
       "url": "/"
     },
     {
+      "label": "전체 글",
+      "url": "/archive"
+    },
+    {
       "label": "커뮤니티 소개",
       "url": "/about"
     }
