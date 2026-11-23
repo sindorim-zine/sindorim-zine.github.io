@@ -118,6 +118,15 @@ const jsonLd = [
         <a href={withBase('/about')} class="btn btn-ghost">커뮤니티 소개 보기</a>
       )}
     </div>
+    {/* 행사 포스터·전단지·현장 안내용: 이 글로 바로 오는 QR (펼칠 때만 이미지를 불러옵니다) */}
+    <details class="qr-share mt-6 rounded-[var(--radius-card)] border border-line p-4 text-sm" data-pagefind-ignore>
+      <summary class="cursor-pointer font-semibold text-muted hover:text-ink">📱 QR로 이 글 공유하기</summary>
+      <div class="mt-4 flex flex-col items-center gap-3 text-center">
+        <img src={withBase(`/qr/posts/${post.id}.png`)} alt={`${title} 글로 연결되는 QR 코드`} width="200" height="200" loading="lazy" decoding="async" class="rounded-lg border border-line bg-white p-1" />
+        <p class="text-muted">휴대폰 카메라로 찍으면 이 글이 바로 열립니다. 포스터·전단지에 넣어 쓰세요.</p>
+        <a class="btn btn-ghost text-sm" href={withBase(`/qr/posts/${post.id}.png`)} download={`sinker-qr-${post.id}.png`}>고해상도 QR 이미지 받기</a>
+      </div>
+    </details>
     <p class="mt-8 text-center">
       <a href={withBase('/')} class="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">← 최신 소식 목록으로</a>
     </p>

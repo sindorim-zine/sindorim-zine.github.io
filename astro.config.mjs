@@ -24,7 +24,8 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: (page) => !/\/404\/?$/.test(page),
+      // 404와 QR 모음(운영 도구)은 검색 대상이 아니므로 사이트맵에서 뺍니다.
+      filter: (page) => !/\/(404|qr)\/?$/.test(page),
       // 글마다 마지막 수정일(lastmod)을 넣어 검색엔진이 새 글·바뀐 글을 먼저 다시 수집하게 합니다.
       serialize: lastmodSerializer(base),
     }),

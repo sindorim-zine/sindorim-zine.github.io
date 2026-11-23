@@ -1,0 +1,72 @@
+---
+// 오프라인 홍보용 QR 모음 페이지 (/qr/)
+// 포스터·전단지·행사 현수막·카페 배너에 넣을 QR을 내려받는 운영 도구라서 검색 결과에는 내보내지 않습니다(noindex).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { qrSvg, qrTargets } from '../../utils/qr';
+import { siteConfig } from '../../utils/site';
+import { withBase } from '../../utils/url';
+
+const targets = await Promise.all(
+  qrTargets(Astro.site).map(async (t) => ({ ...t, svg: await qrSvg(t.url) })),
+);
+---
+<BaseLayout title="QR 코드 모음" description={`${siteConfig.siteTitle} 홍보용 QR 코드를 내려받을 수 있습니다.`} noindex>
+  <section class="container-page py-14 md:py-20">
+    <p class="eyebrow">QR 코드</p>
+    <h1 class="mt-3 text-3xl font-bold sm:text-4xl">휴대폰으로 찍으면 바로 열려요</h1>
+    <p class="mt-4 max-w-2xl leading-relaxed text-muted">
+      주소를 외우거나 입력하지 않아도 되도록 QR 코드를 준비했습니다. 포스터·전단지·행사 안내문·현수막에 넣거나,
+      이 화면을 그대로 보여 주고 찍게 하셔도 됩니다.
+    </p>
+
+    <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {targets.map((t) => (
+        <li class="card flex flex-col p-5">
+          <div class="qr-frame" set:html={t.svg} aria-label={`${t.label} QR 코드`} role="img" />
+          <p class="mt-4 font-heading text-lg font-bold">{t.label}</p>
+          <p class="mt-1 text-sm text-muted">{t.description}</p>
+          <p class="mt-2 break-all text-xs text-muted">{t.url}</p>
+          <div class="mt-auto flex gap-2 pt-4">
+            <a class="btn btn-primary flex-1 justify-center !px-3 text-sm" href={withBase(`/qr/${t.key}.png`)} download={`sinker-${t.key}-qr.png`}>PNG 받기</a>
+            <a class="btn btn-ghost flex-1 justify-center !px-3 text-sm" href={withBase(`/qr/${t.key}.svg`)} download={`sinker-${t.key}-qr.svg`}>SVG 받기</a>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-14 grid gap-6 md:grid-cols-2">
+      <div class="card p-6">
+        <h2 class="font-heading text-xl font-bold">어디에 쓰면 좋을까요</h2>
+        <ul class="mt-4 space-y-2 text-sm leading-relaxed">
+          <li>· <b>행사·봉사 현장</b> — 안내 데스크나 현수막에 “웹 아카이브 홈” QR</li>
+          <li>· <b>전단지·포스터</b> — 해당 행사 글의 QR (글 맨 아래 “QR로 이 글 공유”에서 받기)</li>
+          <li>· <b>네이버 카페 배너·공지</b> — “웹 아카이브 홈” 이미지를 함께 올리기</li>
+          <li>· <b>처음 오신 분</b> — “커뮤니티 소개” QR로 신커가 어떤 곳인지 먼저 보여 주기</li>
+        </ul>
+      </div>
+      <div class="card p-6">
+        <h2 class="font-heading text-xl font-bold">인쇄할 때 알아 두세요</h2>
+        <ul class="mt-4 space-y-2 text-sm leading-relaxed">
+          <li>· <b>PNG</b>는 1200×1200 고해상도라 A4 인쇄까지 충분합니다. 현수막처럼 크게 뽑을 땐 <b>SVG</b>(벡터)를 디자이너에게 전달하세요.</li>
+          <li>· 가로·세로 <b>2cm 이상</b>, 주변에 흰 여백을 남겨 두면 잘 읽힙니다.</li>
+          <li>· 오류 복구 수준을 가장 높게(H) 만들어서 일부가 가려지거나 번져도 인식됩니다.</li>
+          <li>· QR 아래에 주소(<span class="break-all">{targets[0]?.url}</span>)를 함께 적어 두면 QR을 못 쓰는 분도 들어올 수 있어요.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .qr-frame {
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px;
+    border: 1px solid var(--line, #e5e7eb);
+  }
+  .qr-frame :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
