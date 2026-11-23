@@ -1,6 +1,6 @@
 {
   "design": {
-    "themePreset": "winter-navy",
+    "themePreset": "blossom",
     "heroStyle": "magazine-card",
     "headingFont": "serif",
     "defaultViewMode": "grid",
@@ -16,8 +16,8 @@
   "siteTitle": "신도림 커뮤니티",
   "siteDescription": "서울 구로구 신도림동 이웃들의 모임·행사·동네 소식,기부와 봉사활동을 기록하는 네이버 카페 '신도림 커뮤니티'의 공식 웹 아카이브입니다.",
   "representativeName": "신도림 커뮤니티 운영진",
-  "heroTitle": "도림천 따라 이어지는\n우리 동네 이야기",
-  "heroSubtitle": "신도림에 사는 이웃들이 함께 만드는 모임, 행사, 생활 정보를 차곡차곡 기록합니다. 실제 대화와 댓글은 네이버 카페에서 이어집니다.",
+  "heroTitle": "봉사 기부 교육 예술의 나눔\n신커 봉사단\n신도림커뮤니티",
+  "heroSubtitle": "신도림에 사는 이웃들이 함께 만드는 모임, 행사, 생활 정보를 차곡차곡 기록합니다. 실제 대화와 댓글은 네이버 카페에서 이어집니다. 신도림종합정보/기부봉사/신커봉사단/교육,문화,맛집,플리마켓/더링크/테크노/구로/영등포/문래/목동/신커",
   "heroImage": "/images/hero-default.svg",
   "cafeUrl": "https://cafe.naver.com/wooseongapt",
   "categories": [
