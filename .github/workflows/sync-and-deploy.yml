@@ -82,6 +82,17 @@ jobs:
 
       - name: GitHub Pages 배포
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      # GitHub 쪽 일시 오류("No artifacts named github-pages")가 가끔 생겨, 20초 뒤 한 번 더 배포합니다.
+      - name: 배포 재시도 대기
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 20
+
+      - name: GitHub Pages 배포 (재시도)
+        id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
 
       # ── 배포 후: 새 글·수정된 글을 IndexNow로 즉시 알림 ───────────────────
