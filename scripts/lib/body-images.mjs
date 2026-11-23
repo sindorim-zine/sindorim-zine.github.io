@@ -55,6 +55,9 @@ export function toPlainForAi(text) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/[​‌‍﻿]/g, '') // 네이버 편집기가 넣는 보이지 않는 글자 제거
+    // 네이버 복사 시 붙는 '[출처] … | 작성자 [닉네임](프로필 주소)'에서 작성자 정보는 AI에 보내지 않습니다.
+    .replace(/\|?\s*작성자\s*\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\++(\[[^\]]+\]\([^)]+\))\++/g, '$1') // 네이버 밑줄 표시(++링크++) 정리
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -74,8 +77,11 @@ function naverSized(url) {
   }
 }
 
+let lastSize = 0;
+
 async function downloadOne(url, uploadDir, publicPrefix) {
   // 이미 우리 저장소에 있는 사진(CMS 업로드)은 그대로 사용
+  lastSize = 0;
   if (url.startsWith('/')) return url;
 
   let buffer;
@@ -106,6 +112,7 @@ async function downloadOne(url, uploadDir, publicPrefix) {
   }
 
   if (buffer.length < 100 || buffer.length > MAX_BYTES) throw new Error(`크기 비정상 (${buffer.length} bytes)`);
+  lastSize = buffer.length;
   const name = `${createHash('sha1').update(buffer).digest('hex').slice(0, 16)}.${ext}`;
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, name), buffer);
@@ -116,20 +123,50 @@ async function downloadOne(url, uploadDir, publicPrefix) {
  * 사진들을 내려받아 로컬 경로 목록을 돌려줍니다. 실패한 사진은 null.
  * @returns {Promise<{ local: (string|null)[], failed: number }>}
  */
+/** 링크 미리보기 썸네일(dthumb)·스티커처럼 기사 사진이 아닌 작은 이미지인지 */
+function isDecorative(url) {
+  try {
+    const u = new URL(url);
+    if (/^dthumb-phinf\./i.test(u.hostname)) return true; // 링크 미리보기 카드 썸네일
+    if (/storep-phinf|sticker|emoticon/i.test(u.hostname + u.pathname)) return true; // 네이버 스티커·이모티콘
+  } catch {
+    // 상대 경로·data URI 등은 해당 없음
+  }
+  return false;
+}
+
 export async function downloadImages(urls, { root, log = () => {} }) {
   const uploadDir = path.join(root, 'public/images/uploads/cafe');
   const local = [];
+  const sizes = [];
   let failed = 0;
   for (const [i, url] of urls.entries()) {
+    if (isDecorative(url)) {
+      local.push(null);
+      sizes.push(0);
+      log(`  사진 ${i + 1}: 링크 미리보기·스티커 이미지라 제외`);
+      continue;
+    }
     try {
-      local.push(await downloadOne(url, uploadDir, '/images/uploads/cafe'));
+      const saved = await downloadOne(url, uploadDir, '/images/uploads/cafe');
+      local.push(saved);
+      sizes.push(lastSize);
     } catch (error) {
       failed++;
       local.push(null);
+      sizes.push(0);
       log(`  사진 ${i + 1} 내려받기 실패 → 본문에서 제외 (${error.message})`);
     }
   }
-  return { local, failed };
+  return { local, sizes, failed };
+}
+
+/** 대표 사진: 본문 사진 중 충분히 큰(20KB 이상) 첫 사진, 없으면 가장 큰 사진 */
+export function pickThumbnail(local, sizes) {
+  const candidates = local.map((src, i) => ({ src, size: sizes[i] || 0 })).filter((c) => c.src);
+  if (!candidates.length) return undefined;
+  const big = candidates.find((c) => c.size >= 20 * 1024 || c.src.startsWith('/images/uploads/') && !c.src.startsWith('/images/uploads/cafe/'));
+  return (big ?? candidates.sort((a, b) => b.size - a.size)[0]).src;
 }
 
 /** AI가 정리한 본문의 [[사진N]] 표시를 실제 사진으로 바꾸고, 빠진 사진은 끝에 붙입니다. */
