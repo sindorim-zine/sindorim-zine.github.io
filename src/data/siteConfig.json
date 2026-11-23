@@ -3,6 +3,7 @@
     "themePreset": "blossom",
     "heroStyle": "magazine-card",
     "headingFont": "serif",
+    "bodyFont": "pretendard",
     "defaultViewMode": "grid",
     "defaultSort": "newest"
   },

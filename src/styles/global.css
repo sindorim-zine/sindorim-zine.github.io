@@ -2,7 +2,7 @@
 
 /* =========================================================
    1. 시맨틱 디자인 토큰 (기본값 = sage)
-   <html data-theme="..." data-heading-font="..."> 속성만 바꾸면
+   <html data-theme="..."> 속성과 서체 변수(--font-heading, --font-body)만 바꾸면
    사이트 전체 색상과 제목 서체가 즉시 바뀝니다.
    ========================================================= */
 :root {
@@ -110,8 +110,11 @@
 }
 
 /* 제목 서체 전환 */
-[data-heading-font="serif"] { --font-heading: var(--font-serif); }
-[data-heading-font="sans"] { --font-heading: var(--font-body); }
+/* 제목·본문 서체는 BaseLayout이 <html style="--font-heading:…; --font-body:…">로 지정합니다 (src/utils/fonts.ts) */
+/* 굵기가 하나뿐인 서체(손글씨·송명·고운돋움 등)는 억지로 굵게 만들지 않고 보통 굵기로 표시 */
+[data-heading-weight="regular"] :is(h1, h2, h3, h4, .feed-title, .section-title, .font-heading) { font-weight: 400 !important; }
+/* 손글씨처럼 글자가 작아 보이는 서체는 크기를 보정 */
+:is(h1, h2, h3, h4, .feed-title, .section-title, .font-heading) { font-size-adjust: var(--heading-size-adjust, none); }
 
 /* Tailwind 유틸리티에서도 토큰을 쓸 수 있도록 연결 (예: bg-surface, text-muted, text-accent) */
 @theme inline {

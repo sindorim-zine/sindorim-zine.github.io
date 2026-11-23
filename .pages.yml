@@ -293,15 +293,47 @@ content:
                 - name: minimal-typo
                   label: 미니멀 글자형 (이미지 없음)
           - name: headingFont
-            label: 제목 서체
+            label: 제목 서체 (모두 무료 OFL 폰트)
             type: select
             default: serif
+            description: 사이트 제목·글 제목에 쓰이는 서체입니다. 바꾼 뒤 1~2분 후 Ctrl+F5로 확인하세요.
             options:
               values:
                 - name: serif
-                  label: 감성 명조체 - 고운바탕 (기본)
+                  label: 고운바탕 — 따뜻한 감성 명조 (기본)
+                - name: myeongjo
+                  label: 나눔명조 — 단정한 잡지 명조
+                - name: noto-serif
+                  label: 노토 세리프 — 또렷하고 우아한 명조
+                - name: hahmlet
+                  label: 함렛 — 현대적이고 세련된 명조
+                - name: songmyung
+                  label: 송명 — 붓글씨 느낌의 고풍스러운 명조
+                - name: diphylleia
+                  label: 디필레아 — 가늘고 우아한 장식 명조
                 - name: sans
-                  label: 깔끔한 고딕체 - 프리텐다드
+                  label: 프리텐다드 — 깔끔한 모던 고딕
+                - name: dodum
+                  label: 고운돋움 — 부드럽고 둥근 고딕
+                - name: pen
+                  label: 나눔손글씨 펜 — 정겨운 손글씨
+          - name: bodyFont
+            label: 본문 서체 (모두 무료 OFL 폰트)
+            type: select
+            default: pretendard
+            description: 글 본문·설명 문장에 쓰이는 서체입니다. 긴 글은 읽기 편한 고딕을 권합니다.
+            options:
+              values:
+                - name: pretendard
+                  label: 프리텐다드 — 깔끔하고 읽기 편한 고딕 (기본)
+                - name: dodum
+                  label: 고운돋움 — 부드럽고 따뜻한 고딕
+                - name: noto-sans
+                  label: 노토 산스 — 표준적이고 또렷한 고딕
+                - name: plex
+                  label: IBM Plex Sans KR — 단정한 정보형 고딕
+                - name: myeongjo
+                  label: 나눔명조 — 브런치 에세이 같은 명조 본문
           - name: defaultViewMode
             label: 첫 화면 글 목록 보기 방식
             type: select

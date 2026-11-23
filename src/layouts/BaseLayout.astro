@@ -5,6 +5,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SearchModal from '../components/SearchModal.astro';
 import { siteConfig, THEME_COLORS } from '../utils/site';
+import { BODY_FONT_DEFS, HEADING_FONT_DEFS, fontStylesheets, type FontDef } from '../utils/fonts';
 import { absoluteUrl, withBase } from '../utils/url';
 
 interface Props {
@@ -31,7 +32,12 @@ const {
   noindex = false,
 } = Astro.props;
 
-const { themePreset, headingFont, defaultViewMode, heroStyle } = siteConfig.design;
+const { themePreset, headingFont, bodyFont, defaultViewMode, heroStyle } = siteConfig.design;
+// 운영자가 고른 제목·본문 서체 (고른 서체만 내려받음)
+const headingDef: FontDef = HEADING_FONT_DEFS[headingFont];
+const bodyDef: FontDef = BODY_FONT_DEFS[bodyFont];
+const fontCss = fontStylesheets(headingFont, bodyFont);
+const fontVars = `--font-heading:${headingDef.stack};--font-body:${bodyDef.stack};--heading-weight:${headingDef.singleWeight ? 400 : 700};${headingDef.sizeAdjust ? `--heading-size-adjust:${headingDef.sizeAdjust};` : ''}`;
 const pageTitle = title ? `${title} | ${siteConfig.siteTitle}` : siteConfig.siteTitle;
 const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
 // SVG는 SNS 미리보기에서 지원되지 않는 경우가 많아 PNG 기본 이미지로 대체합니다.
@@ -42,7 +48,7 @@ const themeColor = THEME_COLORS[themePreset].background;
 const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
 ---
 <!doctype html>
-<html lang="ko" data-theme={themePreset} data-heading-font={headingFont} data-hero={heroStyle} data-view={defaultViewMode}>
+<html lang="ko" data-theme={themePreset} data-heading-font={headingFont} data-body-font={bodyFont} data-heading-weight={headingDef.singleWeight ? 'regular' : 'bold'} data-hero={heroStyle} data-view={defaultViewMode} style={fontVars}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -71,14 +77,12 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- 한글 웹폰트 (Pretendard, Gowun Batang) -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" />
+    <!-- 한글 웹폰트: CMS에서 고른 제목·본문 서체만 불러옵니다 (모두 OFL 무료 폰트) -->
+    {fontCss.some((u) => u.includes('jsdelivr')) && <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />}
+    {fontCss.some((u) => u.includes('googleapis')) && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+    {fontCss.some((u) => u.includes('googleapis')) && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+    {fontCss.map((href) => <link rel="preload" as="style" href={href} />)}
+    {fontCss.map((href) => <link rel="stylesheet" href={href} />)}
 
     <!-- 방문자 보기 모드: 운영자 기본값이 바뀌면 키도 바뀌므로 새 기본 화면이 우선 적용됩니다. -->
     <script is:inline define:vars={{ viewStorageKey, defaultViewMode }}>

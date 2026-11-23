@@ -2,17 +2,16 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import siteConfigJson from '../data/siteConfig.json';
 import aboutJson from '../data/about.json';
 import { isHttpUrl } from './url';
+import { BODY_FONTS, HEADING_FONTS, type BodyFont, type HeadingFont } from './fonts';
 
 export type Post = CollectionEntry<'posts'>;
 
 export const THEME_PRESETS = ['sage', 'blossom', 'terracotta', 'winter-navy', 'minimal-mono'] as const;
 export const HERO_STYLES = ['magazine-card', 'full-visual', 'minimal-typo'] as const;
-export const HEADING_FONTS = ['serif', 'sans'] as const;
 export const VIEW_MODES = ['grid', 'list'] as const;
 
 export type ThemePreset = (typeof THEME_PRESETS)[number];
 export type HeroStyle = (typeof HERO_STYLES)[number];
-export type HeadingFont = (typeof HEADING_FONTS)[number];
 export type ViewMode = (typeof VIEW_MODES)[number];
 
 /** 브라우저 주소창 색상(<meta name="theme-color">)용 테마별 대표 색 */
@@ -59,6 +58,7 @@ export const siteConfig = {
     themePreset: pick<ThemePreset>(rawDesign.themePreset, THEME_PRESETS, 'sage'),
     heroStyle: pick<HeroStyle>(rawDesign.heroStyle, HERO_STYLES, 'magazine-card'),
     headingFont: pick<HeadingFont>(rawDesign.headingFont, HEADING_FONTS, 'serif'),
+    bodyFont: pick<BodyFont>(rawDesign.bodyFont, BODY_FONTS, 'pretendard'),
     defaultViewMode: pick<ViewMode>(rawDesign.defaultViewMode, VIEW_MODES, 'grid'),
     defaultSort: pick<'newest' | 'event' | 'oldest' | 'title'>(rawDesign.defaultSort, ['newest', 'event', 'oldest', 'title'], 'newest'),
   },
