@@ -47,14 +47,15 @@ ChatGPT 검색과 Microsoft Copilot은 Bing 색인을 크게 활용합니다.
 
 ---
 
-## ☐ Step 4. 네이버 웹문서 보강 — 네이버 서치어드바이저
+## ☑ Step 4. 네이버 웹문서 보강 — 네이버 서치어드바이저 (소유 확인 완료)
 
 1. https://searchadvisor.naver.com 접속 → 네이버 로그인 → **웹마스터 도구**
 2. 사이트 주소 `https://sindorim-zine.github.io` 입력 → **추가**
 3. 소유 확인: **HTML 태그**(`<meta name="naver-site-verification" ...>`) 또는 **HTML 파일**(`naverXXXX.html`) 값을 **Pages CMS → 🔎 검색엔진 소유 확인 코드 → 네이버** 칸에 붙여 넣고 Save → 2분 뒤 **소유확인** 클릭
 4. 사이트 선택 → **요청** → **사이트맵 제출** → `https://sindorim-zine.github.io/sitemap-index.xml` 입력 → 확인
-5. **요청** → **웹 페이지 수집** → 홈 주소와 `/about/` 주소 수집 요청
-6. (선택) **검증** → **robots.txt**에서 수집 허용 상태를 확인합니다. 이 사이트의 robots.txt는 네이버 로봇(Yeti)을 명시적으로 허용합니다.
+5. **요청** → **RSS 제출** → `https://sindorim-zine.github.io/rss.xml`
+6. **요청** → **웹 페이지 수집** → 홈, `/about/`, `/archive/` 주소 수집 요청
+7. (선택) **검증** → **robots.txt**에서 수집 허용 상태를 확인합니다. 이 사이트의 robots.txt는 네이버 로봇(Yeti)을 명시적으로 허용합니다.
 
 ---
 
