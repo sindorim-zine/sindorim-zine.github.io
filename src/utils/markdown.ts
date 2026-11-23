@@ -1,5 +1,5 @@
 // AI 크롤러용 순수 마크다운 생성기 (llms.txt, llms-full.txt, about.md, posts/[id].md)
-import { about, formatDate, siteConfig, type Post } from './site';
+import { about, eventOf, formatDate, formatEvent, siteConfig, type Post } from './site';
 import { absoluteUrl, isHttpUrl, postMarkdownPath, postPath } from './url';
 
 type Site = URL | string | undefined;
@@ -63,7 +63,9 @@ export function coreContextMarkdown(site: Site, { full }: { full: boolean }): st
 export function postLinkLine(post: Post, site: Site): string {
   const date = post.data.pubDate.toISOString().slice(0, 10);
   const summary = post.data.summary ? `: ${oneLine(post.data.summary)}` : '';
-  return `- [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)}) (${date}, ${post.data.category})${summary}`;
+  const event = eventOf(post);
+  const when = event ? `, ${event.label} ${event.start}${event.end !== event.start ? `~${event.end}` : ''}` : '';
+  return `- [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)}) (${date}, ${post.data.category}${when})${summary}`;
 }
 
 /** 게시글 전체 마크다운 (상세 .md 미러와 llms-full.txt에서 사용) */
@@ -75,6 +77,8 @@ export function postMarkdown(post: Post, site: Site, { headingLevel = 1 }: { hea
     `- 작성: ${siteConfig.representativeName}`,
     `- 웹 페이지: ${absoluteUrl(postPath(post.id), site)}`,
   ];
+  const event = eventOf(post);
+  if (event) meta.push(`- ${event.label}: ${formatEvent(event).replace(` ${event.label}`, '')} (${event.start}${event.end !== event.start ? ` ~ ${event.end}` : ''})`);
   if (post.data.pinned) meta.push('- 상단 고정 중요 안내');
   if (isHttpUrl(post.data.originalUrl)) meta.push(`- 네이버 카페 원문: ${post.data.originalUrl}`);
 

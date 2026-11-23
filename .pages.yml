@@ -160,6 +160,22 @@ content:
         label: 발행 시각 (자동 기록, 같은 날 글의 순서용)
         type: string
         hidden: true
+      - name: eventDate
+        label: 📅 행사 날짜 (선택 — 행사일·접수 마감일 등, 비우면 행사 아님)
+        type: date
+        default: ""
+        description: '카페 글 올리기로 올리면 AI가 원문에서 자동으로 채웁니다. 틀렸으면 여기서 고치세요. 다가오는 행사순 정렬과 D-day 표시에 쓰입니다.'
+        options:
+          format: yyyy-MM-dd
+      - name: eventEndDate
+        label: 📅 행사 종료일 (선택 — 기간이 있을 때만)
+        type: date
+        default: ""
+        options:
+          format: yyyy-MM-dd
+      - name: eventLabel
+        label: 행사 날짜 이름 (예 행사일, 접수 마감, 이벤트 기간)
+        type: string
       - name: body
         label: 본문
         type: rich-text
@@ -304,6 +320,8 @@ content:
               values:
                 - name: newest
                   label: 최신순 (기본)
+                - name: event
+                  label: 다가오는 행사순 (행사 날짜가 가까운 글부터)
                 - name: oldest
                   label: 오래된순
                 - name: title

@@ -66,12 +66,39 @@ export function normalizeUrl(url) {
 }
 
 /** YAML Frontmatter를 JSON.stringify로 안전하게 직렬화한 마크다운 */
-export function buildPostMarkdown({ title, pubDate, publishedAt, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
+/** 본문에 줄바꿈이 '\n' 글자로 들어온 경우 실제 줄바꿈으로 바꿉니다(일부 모델이 이중 이스케이프로 응답). */
+export function fixEscapedNewlines(text) {
+  const value = String(text ?? '');
+  const literal = value.split('\\n').length - 1;
+  const real = value.split('\n').length - 1;
+  if (literal === 0 || literal <= real) return value;
+  return value.split('\\n').join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+/** 행사 날짜 검증: YYYY-MM-DD 형식이고 게시일 기준 1년 전~2년 뒤 범위만 인정 */
+export function cleanEventDates({ eventDate, eventEndDate, eventLabel }, pubDate) {
+  const isDay = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) && !Number.isNaN(Date.parse(v.trim()));
+  const base = Date.parse(pubDate || kstDateString());
+  const inRange = (v) => {
+    const t = Date.parse(v);
+    return t >= base - 366 * 86400000 && t <= base + 2 * 366 * 86400000;
+  };
+  const start = isDay(eventDate) && inRange(eventDate.trim()) ? eventDate.trim() : '';
+  if (!start) return {};
+  const end = isDay(eventEndDate) && eventEndDate.trim() > start && inRange(eventEndDate.trim()) ? eventEndDate.trim() : '';
+  const label = String(eventLabel || '').trim().slice(0, 12) || '행사일';
+  return { eventDate: start, ...(end ? { eventEndDate: end } : {}), eventLabel: label };
+}
+
+export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
   const lines = [
     '---',
     `title: ${JSON.stringify(title)}`,
     `pubDate: ${JSON.stringify(pubDate)}`,
     ...(publishedAt ? [`publishedAt: ${JSON.stringify(publishedAt)}`] : []),
+    ...(eventDate ? [`eventDate: ${JSON.stringify(eventDate)}`] : []),
+    ...(eventEndDate ? [`eventEndDate: ${JSON.stringify(eventEndDate)}`] : []),
+    ...(eventDate && eventLabel ? [`eventLabel: ${JSON.stringify(eventLabel)}`] : []),
     `category: ${JSON.stringify(category)}`,
     `summary: ${JSON.stringify(summary)}`,
     `pinned: ${pinned ? 'true' : 'false'}`,
@@ -108,17 +135,25 @@ function systemInstruction(categories) {
 - urlSlug: 제목 의미를 담은 영문 소문자·숫자·하이픈 3~6단어 (예: sindorim-year-end-party-guide). 한글·공백·특수문자 금지.
 - summary: 원문 사실만으로 쓴 정확히 3문장의 핵심 요약.
 - category: 다음 중 하나만 선택: ${categories.join(', ')}
-- markdownBody: 한국어 마크다운 본문. 첫 줄에 제목(#)을 쓰지 마세요. 필요하면 ## 소제목, 목록, 굵은 글씨로 읽기 쉽게 정리하되 원문의 중요한 정보는 빠뜨리지 마세요.`;
+- markdownBody: 한국어 마크다운 본문. 첫 줄에 제목(#)을 쓰지 마세요. 필요하면 ## 소제목, 목록, 굵은 글씨로 읽기 쉽게 정리하되 원문의 중요한 정보는 빠뜨리지 마세요. 줄바꿈은 실제 줄바꿈 문자로 쓰고 "\\n" 같은 글자로 쓰지 마세요.
+
+[행사 날짜 — 다가오는 행사순 정렬에 쓰임]
+- eventDate: 독자가 가장 알아야 할 날짜를 YYYY-MM-DD로. 모임·행사는 행사 당일(여러 날이면 시작일), 공모·신청·모집은 접수 마감일, 이벤트는 시작일.
+- eventEndDate: 기간이 있는 경우의 마지막 날 (YYYY-MM-DD). 하루짜리면 빈 문자열.
+- eventLabel: 그 날짜의 의미를 2~6글자로. 예: "행사일", "모임일", "접수 마감", "신청 마감", "이벤트 기간", "행사 기간".
+- 원문에 구체적인 날짜가 없으면 세 값 모두 빈 문자열로 두세요. 날짜를 추측하거나 지어내지 마세요.
+- 원문에 연도가 없으면 게시일을 기준으로 그 이후 가장 가까운 해의 날짜로 정하세요(예: 게시일이 2026-11-23이고 원문이 "1월 5일"이면 2027-01-05).`;
 }
 
 /**
  * @returns {Promise<{cleanTitle:string,urlSlug:string,summary:string,category:string,markdownBody:string}>}
  */
-export async function writeWithGemini({ apiKey, categories, sourceText, hintTitle, hintCategory }) {
+export async function writeWithGemini({ apiKey, categories, sourceText, hintTitle, hintCategory, pubDate }) {
   const { GoogleGenAI, Type } = await import('@google/genai');
   const ai = new GoogleGenAI({ apiKey });
   const userText = [
     '다음은 운영진이 네이버 카페에서 붙여 넣은 글입니다. 규칙에 따라 JSON으로 변환하세요.',
+    `게시일: ${pubDate || kstDateString()}`,
     hintTitle ? `운영진이 정한 제목(가능하면 그대로 쓰고, 다듬더라도 의미를 바꾸지 마세요): ${hintTitle}` : '',
     hintCategory ? `운영진이 정한 카테고리(반드시 이 값을 사용): ${hintCategory}` : '',
     '',
@@ -144,9 +179,12 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
           summary: { type: Type.STRING, description: '원문 사실만 담은 3문장 요약' },
           category: { type: Type.STRING, enum: categories, description: '카테고리' },
           markdownBody: { type: Type.STRING, description: '마크다운 본문' },
+          eventDate: { type: Type.STRING, description: '핵심 행사 날짜 YYYY-MM-DD, 없으면 빈 문자열' },
+          eventEndDate: { type: Type.STRING, description: '기간 마지막 날 YYYY-MM-DD, 없으면 빈 문자열' },
+          eventLabel: { type: Type.STRING, description: '날짜 의미 2~6글자, 없으면 빈 문자열' },
         },
-        required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody'],
-        propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody'],
+        required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel'],
+        propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel'],
       },
     },
   });

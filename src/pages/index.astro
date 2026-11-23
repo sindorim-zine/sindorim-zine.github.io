@@ -4,7 +4,8 @@ import Hero from '../components/Hero.astro';
 import PostCard from '../components/PostCard.astro';
 import Icon from '../components/Icon.astro';
 import Illustration from '../components/Illustration.astro';
-import { SORT_OPTIONS, collectCategories, formatDate, getPublishedPosts, illustrationFor, siteConfig, sortPosts, thumbnailOf } from '../utils/site';
+import EventBadge from '../components/EventBadge.astro';
+import { SORT_OPTIONS, collectCategories, eventOf, formatDate, getPublishedPosts, illustrationFor, siteConfig, sortPosts, thumbnailOf } from '../utils/site';
 import { organizationSchema, websiteSchema } from '../utils/schema';
 import { postPath, withBase } from '../utils/url';
 
@@ -17,7 +18,7 @@ const categories = collectCategories(feed);
 const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
 // 운영자가 기본 정렬을 바꾸면 키도 바뀌어, 기존 방문자에게도 새 기본 정렬이 먼저 적용됩니다.
 const sortStorageKey = `sindorim-sort-pref-${defaultSort}`;
-const sortHeadings = { newest: '최신 소식', oldest: '처음부터 보는 소식', title: '제목순 소식' };
+const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', oldest: '처음부터 보는 소식', title: '제목순 소식' };
 ---
 <BaseLayout jsonLd={[organizationSchema(Astro.site), websiteSchema(Astro.site)]}>
   <Hero />
@@ -44,7 +45,11 @@ const sortHeadings = { newest: '최신 소식', oldest: '처음부터 보는 소
                     <span class="chip">{post.data.category}</span>
                   </div>
                   <h3 class="font-heading text-[1.05rem] font-bold leading-snug group-hover:text-accent">{post.data.title}</h3>
-                  <time class="text-xs text-muted" datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                  {eventOf(post) ? (
+                    <EventBadge event={eventOf(post)!} />
+                  ) : (
+                    <time class="text-xs text-muted" datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                  )}
                 </div>
               </a>
             </li>
@@ -124,8 +129,25 @@ const sortHeadings = { newest: '최신 소식', oldest: '처음부터 보는 소
           (num(b, 'data-published') - num(a, 'data-published')) ||
           (b.getAttribute('data-id') || '').localeCompare(a.getAttribute('data-id') || '');
       }
+      // 다가오는 행사순: 진행 중·다가오는 행사(가까운 날짜부터) → 지난 행사(최근 종료부터) → 행사 없는 글(최신순)
+      var today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+      function eventGroup(el) {
+        var end = el.getAttribute('data-event-end');
+        if (!end) return 2;
+        return end >= today ? 0 : 1;
+      }
+      function byEvent(a, b) {
+        var ga = eventGroup(a), gb = eventGroup(b);
+        if (ga !== gb) return ga - gb;
+        var sa = a.getAttribute('data-event-start') || '', sb = b.getAttribute('data-event-start') || '';
+        var ea = a.getAttribute('data-event-end') || '', eb = b.getAttribute('data-event-end') || '';
+        if (ga === 0) return sa.localeCompare(sb) || ea.localeCompare(eb) || newest(a, b);
+        if (ga === 1) return eb.localeCompare(ea) || newest(a, b);
+        return newest(a, b);
+      }
       var comparators = {
         newest: newest,
+        event: byEvent,
         oldest: function (a, b) { return newest(b, a); },
         title: function (a, b) {
           return (a.getAttribute('data-title') || '').localeCompare(b.getAttribute('data-title') || '', 'ko') || newest(a, b);
@@ -140,7 +162,9 @@ const sortHeadings = { newest: '최신 소식', oldest: '처음부터 보는 소
       }
       var savedSort = null;
       try { savedSort = localStorage.getItem(sortStorageKey); } catch (e) {}
-      if (savedSort && savedSort !== defaultSort && comparators[savedSort]) applySort(savedSort);
+      // 행사순은 오늘 날짜에 따라 순서가 바뀌므로, 기본값이어도 방문 시점 기준으로 다시 정렬합니다.
+      if (savedSort && comparators[savedSort] && (savedSort !== defaultSort || savedSort === 'event')) applySort(savedSort);
+      else if (defaultSort === 'event') applySort('event');
       if (select) {
         select.addEventListener('change', function () {
           applySort(select.value);

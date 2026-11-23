@@ -3,7 +3,8 @@ import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
 import Illustration from '../../components/Illustration.astro';
-import { formatDate, getPublishedPosts, illustrationFor, siteConfig, splitSummary, thumbnailOf, type Post } from '../../utils/site';
+import EventBadge from '../../components/EventBadge.astro';
+import { eventOf, formatDate, getPublishedPosts, illustrationFor, siteConfig, splitSummary, thumbnailOf, type Post } from '../../utils/site';
 import { blogPostingSchema, breadcrumbSchema } from '../../utils/schema';
 import { isHttpUrl, postMarkdownPath, postPath, withBase } from '../../utils/url';
 
@@ -19,6 +20,7 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const { title, summary, category, pubDate, originalUrl, pinned } = post.data;
 const thumb = thumbnailOf(post);
+const event = eventOf(post);
 const summaryLines = splitSummary(summary);
 const sourceUrl = isHttpUrl(originalUrl) ? originalUrl : siteConfig.cafeUrl;
 const jsonLd = [
@@ -58,12 +60,17 @@ const jsonLd = [
         <span aria-hidden="true">·</span>
         <span>{siteConfig.representativeName}</span>
       </p>
+      {event && (
+        <div class="event-box mt-5">
+          <EventBadge event={event} size="lg" />
+        </div>
+      )}
     </header>
 
     <div class="container-prose mt-8">
-      <div class="aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-line">
+      <div class="aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-line bg-subtle">
         {thumb ? (
-          <img src={withBase(thumb)} alt="" width="1200" height="750" class="h-full w-full object-cover" fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
+          <img src={withBase(thumb)} alt="" width="1200" height="750" class="h-full w-full object-contain" fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
         ) : (
           <Illustration variant={illustrationFor(category)} class="h-full w-full" label={`${category} 기본 일러스트`} />
         )}

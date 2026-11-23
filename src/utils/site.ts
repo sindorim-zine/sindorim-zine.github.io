@@ -60,7 +60,7 @@ export const siteConfig = {
     heroStyle: pick<HeroStyle>(rawDesign.heroStyle, HERO_STYLES, 'magazine-card'),
     headingFont: pick<HeadingFont>(rawDesign.headingFont, HEADING_FONTS, 'serif'),
     defaultViewMode: pick<ViewMode>(rawDesign.defaultViewMode, VIEW_MODES, 'grid'),
-    defaultSort: pick<'newest' | 'oldest' | 'title'>(rawDesign.defaultSort, ['newest', 'oldest', 'title'], 'newest'),
+    defaultSort: pick<'newest' | 'event' | 'oldest' | 'title'>(rawDesign.defaultSort, ['newest', 'event', 'oldest', 'title'], 'newest'),
   },
   eventBanner: {
     enabled: rawBanner.enabled === true,
@@ -121,16 +121,64 @@ export async function getPublishedPosts(): Promise<Post[]> {
 /** 방문자 정렬 옵션 (운영자가 CMS에서 기본값 선택) */
 export const SORT_OPTIONS = [
   { value: 'newest', label: '최신순' },
+  { value: 'event', label: '다가오는 행사순' },
   { value: 'oldest', label: '오래된순' },
   { value: 'title', label: '제목순' },
 ] as const;
 export type SortMode = (typeof SORT_OPTIONS)[number]['value'];
+
+// ── 행사 정보 ────────────────────────────────────────────────────────────
+export type EventInfo = { start: string; end: string; label: string };
+
+/** 글의 행사 정보 (없으면 null). 종료일이 없거나 시작일보다 앞서면 시작일과 같게 봅니다. */
+export function eventOf(post: Post): EventInfo | null {
+  const start = post.data.eventDate;
+  if (!start) return null;
+  const end = post.data.eventEndDate && post.data.eventEndDate >= start ? post.data.eventEndDate : start;
+  return { start, end, label: (post.data.eventLabel ?? '').trim() || '행사일' };
+}
+
+/** 한국 시간 기준 오늘 날짜 'YYYY-MM-DD' */
+export function todayKst(now = new Date()): string {
+  return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+/** '2026-12-07' → '12월 7일(월)' */
+export function formatDay(day: string): string {
+  const [y, m, d] = day.split('-').map(Number);
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${m}월 ${d}일(${weekday})`;
+}
+
+/** 카드·상세 페이지에 보여 줄 행사 날짜 글: '12월 7일(월) 접수 마감' / '11월 16일(월) ~ 11월 30일(월) 이벤트 기간' */
+export function formatEvent(event: EventInfo): string {
+  const range = event.end !== event.start ? `${formatDay(event.start)} ~ ${formatDay(event.end)}` : formatDay(event.start);
+  return `${range} ${event.label}`;
+}
+
+/** 다가오는 행사순: 진행 중·다가오는 행사(가까운 날짜부터) → 지난 행사(최근 종료부터) → 행사 없는 글(최신순) */
+export function compareEvent(a: Post, b: Post, today = todayKst()): number {
+  const ea = eventOf(a);
+  const eb = eventOf(b);
+  const group = (e: EventInfo | null) => (!e ? 2 : e.end >= today ? 0 : 1);
+  const ga = group(ea);
+  const gb = group(eb);
+  if (ga !== gb) return ga - gb;
+  if (ga === 0) return ea!.start.localeCompare(eb!.start) || ea!.end.localeCompare(eb!.end) || compareNewest(a, b);
+  if (ga === 1) return eb!.end.localeCompare(ea!.end) || compareNewest(a, b);
+  return compareNewest(a, b);
+}
 
 /** 서버에서 미리 정렬해 둡니다(자바스크립트가 꺼져 있어도 기본 정렬로 보임). */
 export function sortPosts(posts: Post[], mode: SortMode): Post[] {
   const list = [...posts];
   if (mode === 'oldest') return list.sort((a, b) => compareNewest(b, a));
   if (mode === 'title') return list.sort((a, b) => a.data.title.localeCompare(b.data.title, 'ko') || compareNewest(a, b));
+  if (mode === 'event') {
+    const today = todayKst();
+    return list.sort((a, b) => compareEvent(a, b, today));
+  }
   return list.sort(compareNewest);
 }
 

@@ -1,0 +1,16 @@
+---
+// 행사 날짜 + D-day 표시. D-day는 방문자가 보는 날짜 기준으로 BaseLayout의 스크립트가 채웁니다.
+import Icon from './Icon.astro';
+import { formatEvent, type EventInfo } from '../utils/site';
+
+interface Props {
+  event: EventInfo;
+  size?: 'sm' | 'lg';
+}
+const { event, size = 'sm' } = Astro.props;
+---
+<p class:list={['event-line', size === 'lg' && 'event-line-lg']} data-event-line data-start={event.start} data-end={event.end}>
+  <Icon name="calendar" size={size === 'lg' ? 16 : 13} />
+  <time datetime={event.start}>{formatEvent(event)}</time>
+  <span class="event-dday" data-dday hidden></span>
+</p>

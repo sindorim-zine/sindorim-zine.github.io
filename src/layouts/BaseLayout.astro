@@ -103,5 +103,25 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     </main>
     <SiteFooter />
     <SearchModal />
+
+    <!-- 행사 D-day: 방문자가 보는 날짜(한국 시간) 기준으로 계산 -->
+    <script is:inline>
+      (function () {
+        var today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+        function days(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 86400000); }
+        document.querySelectorAll('[data-event-line]').forEach(function (el) {
+          var start = el.getAttribute('data-start'), end = el.getAttribute('data-end') || start;
+          var badge = el.querySelector('[data-dday]');
+          if (!start || !badge) return;
+          var state, text;
+          if (end < today) { state = 'ended'; text = '종료'; }
+          else if (start <= today) { state = 'ongoing'; text = start === end ? '오늘' : '진행 중'; }
+          else { var d = days(today, start); state = d <= 7 ? 'soon' : 'upcoming'; text = 'D-' + d; }
+          badge.textContent = text;
+          badge.hidden = false;
+          el.setAttribute('data-state', state);
+        });
+      })();
+    </script>
   </body>
 </html>

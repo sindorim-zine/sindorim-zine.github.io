@@ -1,7 +1,8 @@
 ---
 import Illustration from './Illustration.astro';
 import Icon from './Icon.astro';
-import { formatDate, illustrationFor, publishedTime, thumbnailOf, type Post } from '../utils/site';
+import EventBadge from './EventBadge.astro';
+import { eventOf, formatDate, illustrationFor, publishedTime, thumbnailOf, type Post } from '../utils/site';
 import { postPath, withBase } from '../utils/url';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 const { post, eager = false } = Astro.props;
 const { title, summary, category, pubDate, pinned } = post.data;
 const thumb = thumbnailOf(post);
+const event = eventOf(post);
 ---
 <li
   class="feed-item"
@@ -19,6 +21,8 @@ const thumb = thumbnailOf(post);
   data-published={publishedTime(post)}
   data-id={post.id}
   data-title={title}
+  data-event-start={event?.start}
+  data-event-end={event?.end}
 >
   <a href={withBase(postPath(post.id))} class="feed-card card group">
     <div class="feed-media">
@@ -41,6 +45,7 @@ const thumb = thumbnailOf(post);
         <span class="chip">{category}</span>
       </div>
       <h3 class="feed-title">{title}</h3>
+      {event && <EventBadge event={event} />}
       {summary && <p class="feed-summary">{summary}</p>}
       <p class="feed-meta">
         <Icon name="calendar" size={13} />

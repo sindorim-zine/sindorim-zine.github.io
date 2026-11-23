@@ -25,6 +25,8 @@ import {
   scrubPii,
   toSlug,
   writeWithGemini,
+  fixEscapedNewlines,
+  cleanEventDates,
 } from './lib/ai-writer.mjs';
 import { downloadImages, extractImages, pickThumbnail, restoreImages, toPlainForAi } from './lib/body-images.mjs';
 
@@ -152,7 +154,7 @@ async function main() {
     if (!aiBlocked) {
       if (index > 0) await sleep(DELAY_MS);
       try {
-        result = await writeWithGemini({ apiKey, categories, sourceText: scrubPii(plainText).slice(0, 12000), hintTitle, hintCategory });
+        result = await writeWithGemini({ apiKey, categories, sourceText: scrubPii(plainText).slice(0, 12000), hintTitle, hintCategory, pubDate });
       } catch (error) {
         const full = error?.message || String(error);
         // 구글 오류는 JSON 문자열로 오므로 사람이 읽을 메시지만 꺼냅니다.
@@ -172,7 +174,9 @@ async function main() {
     // 본문 속 사진을 내려받아 원래 위치([[사진N]])에 다시 넣습니다. (네이버 이미지는 외부 사이트 표시가 막혀 있어 직접 저장)
     const { local: bodyImages, sizes: imageSizes } = await downloadImages(imageUrls, { root: ROOT, log });
     if (imageUrls.length) log(`  본문 사진 ${bodyImages.filter(Boolean).length}/${imageUrls.length}장 저장`);
-    let markdownBody = restoreImages(scrubPii(result.markdownBody).replace(/^#\s+.*\n+/, '').trim(), bodyImages);
+    let markdownBody = restoreImages(scrubPii(fixEscapedNewlines(result.markdownBody)).replace(/^#\s+.*\n+/, '').trim(), bodyImages);
+    const eventInfo = cleanEventDates(result, pubDate);
+    if (eventInfo.eventDate) log(`  행사 정보: ${eventInfo.eventDate}${eventInfo.eventEndDate ? ` ~ ${eventInfo.eventEndDate}` : ''} (${eventInfo.eventLabel})`);
     // ③ 사진 추가 칸의 사진: 첫 장은 대표 사진, 나머지는 본문 아래에 붙입니다.
     if (photos.length > 1) {
       markdownBody += `\n\n${photos.slice(1).map((p, i) => `![사진 ${i + 2}](${p})`).join('\n\n')}`;
@@ -185,8 +189,9 @@ async function main() {
       pubDate,
       // 같은 글을 다시 올려 교체할 때는 처음 발행 시각을 유지해 목록 순서가 바뀌지 않게 합니다.
       publishedAt: existing?.publishedAt || new Date().toISOString(),
+      ...eventInfo,
       category,
-      summary: scrubPii(result.summary).replace(/\s+/g, ' ').trim(),
+      summary: scrubPii(fixEscapedNewlines(result.summary)).replace(/\s+/g, ' ').trim(),
       pinned,
       draft,
       thumbnail: photos[0] || pickThumbnail(bodyImages, imageSizes),
