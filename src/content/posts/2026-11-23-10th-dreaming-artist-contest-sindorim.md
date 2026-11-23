@@ -27,4 +27,4 @@ originalUrl: "https://cafe.naver.com/wooseongapt/551356"
 - [🎨제10회 꿈꾸는 미술가 공모전 참가신청서 - 네이버 폼](https://form.naver.com/response/3kfZIV147O0)
 - [카카오톡채널 - 제10회 꿈꾸는 미술가 공모전](https://pf.kakao.com/_rWRxeX)
 
-![사진 2](/images/uploads/cafe/b228a9b85ea2abb8.jpg)
+![신도림 커뮤니티 제10회 꿈꾸는 미술가 공모전 안내 사진 2](/images/uploads/cafe/b228a9b85ea2abb8.jpg)

@@ -41,7 +41,7 @@ const feedUrl = withBase('/feed.json');
               <a href={withBase(postPath(post.id))} class="card group flex items-stretch gap-4 overflow-hidden p-3 transition hover:-translate-y-0.5">
                 <div class="aspect-square w-24 shrink-0 overflow-hidden rounded-[calc(var(--radius-card)*0.7)] sm:w-28">
                   {thumb ? (
-                    <img src={withBase(thumb)} alt="" width="112" height="112" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    <img src={withBase(thumb)} alt={`${post.data.title} 대표 사진`} width="112" height="112" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <Illustration variant={illustrationFor(post.data.category)} class="h-full w-full" />
                   )}
@@ -119,13 +119,16 @@ const feedUrl = withBase('/feed.json');
         )}
       </div>
     )}
-    <p id="feed-empty" class="card hidden p-8 text-center text-muted">이 카테고리에는 아직 글이 없습니다.</p>
+    {/* 빈 카테고리 안내는 필요할 때만 스크립트가 글자를 채웁니다(초기 HTML에 숨은 문구를 두지 않음). */}
+    <p id="feed-empty" class="card p-8 text-center text-muted" hidden></p>
 
     {feed.length > 0 && (
       <div class="mt-8 flex flex-col items-center gap-3">
-        <button type="button" id="feed-more" class="btn btn-ghost" hidden={feed.length <= PAGE_SIZE}>
-          소식 더 보기 <span class="text-muted" data-more-count>({feed.length - firstPage.length}개 남음)</span>
-        </button>
+        {feed.length > PAGE_SIZE && (
+          <button type="button" id="feed-more" class="btn btn-ghost">
+            소식 더 보기 <span class="text-muted" data-more-count>({feed.length - firstPage.length}개 남음)</span>
+          </button>
+        )}
         <a href={withBase('/archive/')} class="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
           전체 글 목록 한눈에 보기 <Icon name="arrow-right" size={14} />
         </a>
@@ -243,7 +246,7 @@ const feedUrl = withBase('/feed.json');
         var media = li.querySelector('[data-slot="media"]');
         if (d.thumb) {
           var img = document.createElement('img');
-          img.src = d.thumb; img.alt = ''; img.width = 400; img.height = 500; img.loading = 'lazy'; img.decoding = 'async';
+          img.src = d.thumb; img.alt = d.title + ' 대표 사진'; img.width = 400; img.height = 500; img.loading = 'lazy'; img.decoding = 'async';
           media.appendChild(img);
         } else {
           var tpl = document.getElementById('illustration-' + d.illustration) || document.getElementById('illustration-local');
@@ -305,7 +308,11 @@ const feedUrl = withBase('/feed.json');
           var count = moreBtn.querySelector('[data-more-count]');
           if (count) count.textContent = '(' + remaining + '개 남음)';
         }
-        if (empty) empty.classList.toggle('hidden', shown.length > 0 || total === 0);
+        if (empty) {
+          var showEmpty = shown.length === 0 && total > 0;
+          empty.textContent = showEmpty ? '이 카테고리에는 아직 글이 없습니다.' : '';
+          empty.hidden = !showEmpty;
+        }
         if (select) select.value = state.sort;
         if (heading && headings[state.sort]) heading.textContent = headings[state.sort];
       }

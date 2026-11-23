@@ -70,7 +70,7 @@ const jsonLd = [
     <div class="container-prose mt-8">
       <div class="aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-line bg-subtle">
         {thumb ? (
-          <img src={withBase(thumb)} alt="" width="1200" height="750" class="h-full w-full object-contain" fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
+          <img src={withBase(thumb)} alt={`${title} 대표 사진`} width="1200" height="750" class="h-full w-full object-contain" fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
         ) : (
           <Illustration variant={illustrationFor(category)} class="h-full w-full" label={`${category} 기본 일러스트`} />
         )}

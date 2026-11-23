@@ -28,7 +28,7 @@ import {
   fixEscapedNewlines,
   cleanEventDates,
 } from './lib/ai-writer.mjs';
-import { downloadImages, extractImages, pickThumbnail, restoreImages, toPlainForAi } from './lib/body-images.mjs';
+import { altText, downloadImages, extractImages, pickThumbnail, restoreImages, toPlainForAi } from './lib/body-images.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INBOX_DIR = path.join(ROOT, 'src/inbox');
@@ -174,12 +174,12 @@ async function main() {
     // 본문 속 사진을 내려받아 원래 위치([[사진N]])에 다시 넣습니다. (네이버 이미지는 외부 사이트 표시가 막혀 있어 직접 저장)
     const { local: bodyImages, sizes: imageSizes } = await downloadImages(imageUrls, { root: ROOT, log });
     if (imageUrls.length) log(`  본문 사진 ${bodyImages.filter(Boolean).length}/${imageUrls.length}장 저장`);
-    let markdownBody = restoreImages(scrubPii(fixEscapedNewlines(result.markdownBody)).replace(/^#\s+.*\n+/, '').trim(), bodyImages);
+    let markdownBody = restoreImages(scrubPii(fixEscapedNewlines(result.markdownBody)).replace(/^#\s+.*\n+/, '').trim(), bodyImages, title);
     const eventInfo = cleanEventDates(result, pubDate);
     if (eventInfo.eventDate) log(`  행사 정보: ${eventInfo.eventDate}${eventInfo.eventEndDate ? ` ~ ${eventInfo.eventEndDate}` : ''} (${eventInfo.eventLabel})`);
     // ③ 사진 추가 칸의 사진: 첫 장은 대표 사진, 나머지는 본문 아래에 붙입니다.
     if (photos.length > 1) {
-      markdownBody += `\n\n${photos.slice(1).map((p, i) => `![사진 ${i + 2}](${p})`).join('\n\n')}`;
+      markdownBody += `\n\n${photos.slice(1).map((p, i) => `![${altText(title, i + 2)}](${p})`).join('\n\n')}`;
     }
 
     const existing = originalUrl ? await findPostByOriginalUrl(originalUrl) : null;

@@ -29,7 +29,7 @@ const event = eventOf(post);
       {thumb ? (
         <img
           src={withBase(thumb)}
-          alt=""
+          alt={`${title} 대표 사진`}
           width="400"
           height="500"
           loading={eager ? 'eager' : 'lazy'}

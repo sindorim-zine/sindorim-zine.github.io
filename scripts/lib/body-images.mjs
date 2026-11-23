@@ -179,16 +179,22 @@ export function pickThumbnail(local, sizes) {
 }
 
 /** AI가 정리한 본문의 [[사진N]] 표시를 실제 사진으로 바꾸고, 빠진 사진은 끝에 붙입니다. */
-export function restoreImages(markdown, local) {
+/** 이미지 설명(alt)용 글자: 마크다운을 깨뜨리는 괄호는 빼고 적당한 길이로 */
+export function altText(title, n) {
+  const base = String(title || '').replace(/[[\]()<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+  return base ? `${base} 사진 ${n}` : `사진 ${n}`;
+}
+
+export function restoreImages(markdown, local, title = '') {
   const used = new Set();
   let out = String(markdown).replace(PLACEHOLDER_RE, (_, n) => {
     const i = Number(n) - 1;
     const src = local[i];
     if (!src || used.has(i)) return '';
     used.add(i);
-    return `\n\n![사진 ${i + 1}](${src})\n\n`;
+    return `\n\n![${altText(title, i + 1)}](${src})\n\n`;
   });
-  const missing = local.map((src, i) => (src && !used.has(i) ? `![사진 ${i + 1}](${src})` : null)).filter(Boolean);
+  const missing = local.map((src, i) => (src && !used.has(i) ? `![${altText(title, i + 1)}](${src})` : null)).filter(Boolean);
   if (missing.length) out += `\n\n${missing.join('\n\n')}`;
   return out.replace(/\n{3,}/g, '\n\n').trim();
 }
