@@ -25,8 +25,14 @@ function toDate(value) {
  */
 function lastChanged(file) {
   try {
-    const out = execSync(`git log -1 --format=%cI -- "${file}"`, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-    return out ? new Date(out) : null;
+    const out = execSync(`git log -1 --format="%H %cI" -- "${file}"`, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (!out) return null;
+    const [hash, iso] = out.split(' ');
+    // 배포 서버는 최근 기록만 받아 오므로(shallow clone), 기록의 '경계' 커밋은 그 파일을 실제로 바꾼 커밋이 아닐 수 있습니다.
+    // 경계 커밋이면 정확한 날짜를 알 수 없으므로 수정일을 넣지 않습니다.
+    const shallowFile = path.join(ROOT, '.git', 'shallow');
+    if (existsSync(shallowFile) && readFileSync(shallowFile, 'utf8').split(/\s+/).includes(hash)) return null;
+    return new Date(iso);
   } catch {
     return null;
   }
