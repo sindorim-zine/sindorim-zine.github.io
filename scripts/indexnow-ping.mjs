@@ -2,8 +2,8 @@
 // IndexNow 실시간 색인 핑 (Bing · Naver · Yandex 등 IndexNow 참여 검색엔진에 새 URL을 즉시 알림)
 //
 // 사용법
-//   node scripts/indexnow-ping.mjs              → .cache/new-urls.json(RSS 신규 글)을 전송
-//   node scripts/indexnow-ping.mjs --changed    → 직전 커밋에서 바뀐 게시글(Pages CMS 수정 등)을 전송
+//   node scripts/indexnow-ping.mjs              → .cache/new-urls.json(카페 글 올리기로 새로 발행된 글)을 전송
+//   node scripts/indexnow-ping.mjs --changed    → 위 목록 + 직전 커밋에서 바뀐 게시글(Pages CMS 수정 등)을 함께 전송
 //
 // 키 우선순위: 환경변수 INDEXNOW_KEY → src/data/siteConfig.json의 indexNowKey
 // 키가 없거나 전송에 실패해도 절대 실패 코드를 내지 않습니다.
@@ -75,15 +75,16 @@ async function main() {
   if (!/^https:\/\//.test(root)) return finish(`배포 주소(${root})가 https가 아니어서 건너뜁니다. 로컬 실행에서는 정상입니다.`);
 
   let paths = [];
-  if (process.argv.includes('--changed')) {
-    paths = changedPostPaths();
-  } else if (existsSync(NEW_URLS_FILE)) {
+  if (existsSync(NEW_URLS_FILE)) {
     try {
-      paths = JSON.parse(await readFile(NEW_URLS_FILE, 'utf8'));
+      const fromInbox = JSON.parse(await readFile(NEW_URLS_FILE, 'utf8'));
+      if (Array.isArray(fromInbox)) paths.push(...fromInbox);
     } catch {
-      paths = [];
+      // 무시
     }
   }
+  if (process.argv.includes('--changed')) paths.push(...changedPostPaths());
+  paths = [...new Set(paths)];
   if (!Array.isArray(paths) || paths.length === 0) return finish('새로 알릴 URL이 없습니다.');
 
   // 새 글이 생기면 홈·llms.txt도 함께 갱신 요청합니다.

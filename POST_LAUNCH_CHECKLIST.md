@@ -47,7 +47,7 @@ ChatGPT 검색과 Microsoft Copilot은 Bing 색인을 크게 활용합니다.
    2. GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
       - Name: `INDEXNOW_KEY`
       - Secret: 복사한 키
-   3. **Actions** 탭 → `Sync RSS & Deploy` → **Run workflow**로 한 번 배포합니다.
+   3. **Actions** 탭 → `Publish & Deploy` → **Run workflow**로 한 번 배포합니다.
    4. 브라우저에서 `https://sindorim-zine.github.io/키.txt`를 열어 키가 그대로 보이면 연결 완료입니다.
 4. 이후 새 글이 올라올 때마다 GitHub Actions가 자동으로 IndexNow 신호를 보냅니다. (Bing·네이버·Yandex 등 IndexNow 참여 검색엔진에 함께 전달됩니다)
 

@@ -34,44 +34,58 @@ git push -u origin main
 
 1. GitHub 저장소 화면 → **Settings** → 왼쪽 메뉴 **Pages**
 2. **Build and deployment** → **Source**를 **GitHub Actions**로 선택
-3. 저장소 **Actions** 탭 → `Sync RSS & Deploy` → **Run workflow** 버튼 → 초록색 **Run workflow**
+3. 저장소 **Actions** 탭 → `Publish & Deploy` → **Run workflow** 버튼 → 초록색 **Run workflow**
 4. 1~2분 뒤 초록색 체크가 뜨면 https://sindorim-zine.github.io/ 에서 사이트가 보입니다.
 
 > Actions 탭에 "Workflows aren't being run on this repository" 안내가 보이면 **I understand my workflows, go ahead and enable them**을 눌러 주세요.
 
-### 3단계. 자동 수집용 비밀값(Secrets) 등록 (선택, 자동화를 쓸 때)
+### 3단계. AI 키(Secrets) 등록 — '카페 글 올리기'를 쓰려면 필요
 
 GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
 | 이름 (Name) | 값 | 없으면? |
 |---|---|---|
-| `NAVER_CAFE_RSS_URL` | 네이버 카페 RSS 주소. 여러 개면 콤마(`,`)로 구분 | RSS 자동 수집만 건너뜀 (사이트는 정상 배포) |
-| `GEMINI_API_KEY` | https://aistudio.google.com/apikey 에서 발급한 키 | RSS 자동 수집만 건너뜀 |
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey 에서 발급한 키 (`AIza…`로 시작) | '카페 글 올리기' 항목이 발행되지 않고 **처리 상태**에 "AI 키 미등록"이 표시됨 |
 | `INDEXNOW_KEY` | IndexNow 키 ([체크리스트 Step 3](POST_LAUNCH_CHECKLIST.md) 참고) | 검색엔진 즉시 알림만 건너뜀 |
 
-- 비밀값이 하나도 없어도 사이트 빌드·배포는 **절대 실패하지 않습니다.** 필요한 것부터 천천히 등록하세요.
+- 비밀값이 하나도 없어도 사이트 빌드·배포는 **절대 실패하지 않습니다.**
+- AI 키가 없을 때 발행을 멈추는 이유: 회원 **이름**은 AI만 가릴 수 있어서, 키 없이 올리면 이름이 그대로 노출될 수 있기 때문입니다. 키를 등록한 뒤 해당 항목을 다시 저장하면(또는 다음 날 아침 8시) 자동으로 처리됩니다.
 - **커스텀 도메인**(예: `sindorim.kr`)을 연결했다면 같은 화면의 **Variables** 탭에서 `SITE_URL` = `https://sindorim.kr` 을 추가하세요. 코드 수정은 필요 없습니다.
-- 자동 수집은 **매일 오전 8시(한국 시간)** 에 실행되며, 한 번에 최대 5개 글을 가져옵니다. AI가 회원 개인정보(이름·전화번호·계좌 등)를 가리고, 원문에 없는 일정·장소·회비는 지어내지 않도록 설정되어 있습니다.
-- RSS 주소 확인: 네이버 카페의 RSS 공개 여부와 주소는 카페 관리 메뉴에서 확인할 수 있습니다. 네이버 정책에 따라 메뉴 위치나 제공 여부가 바뀔 수 있으니, 주소를 찾기 어려우면 등록하지 않고 Pages CMS로 직접 글을 올려도 됩니다.
 
-### 4단계. Pages CMS 연결 — 새 글·고정 공지·/about 편집
+> **왜 RSS 자동 수집이 아닌가요?** 네이버 카페 RSS 서비스는 현재 제공되지 않고(`cafe.rss.naver.com` 주소 없음), 네이버 검색 API는 약관상 검색 결과의 저장·가공이 금지되어 있습니다. 또 카페에 하루 수십 건의 글이 올라오므로, **운영진이 고른 글만 붙여 넣으면 AI가 정리하는 방식**이 가장 안전하고 편리합니다.
+
+### 4단계. Pages CMS로 운영하기
 
 1. https://app.pagescms.org 접속 → **Sign in with GitHub**
-2. 처음이면 GitHub 앱 설치 화면이 나옵니다 → `sindorim-zine.github.io` 저장소를 선택해 설치
+2. 처음이면 GitHub 앱 설치 화면이 나옵니다 → **Only select repositories** → `sindorim-zine.github.io` 선택 → Install
 3. 프로젝트 목록에서 `sindorim-zine/sindorim-zine.github.io` → 브랜치 `main` 선택
 
-왼쪽 메뉴 세 가지로 모든 관리를 합니다.
+왼쪽 메뉴 네 가지로 모든 관리를 합니다.
 
 | 메뉴 | 할 수 있는 일 |
 |---|---|
-| **게시글 관리 (새 글 작성 및 상단 고정)** | **+ Add an entry** → 제목·작성일·카테고리·AI 3줄 요약·썸네일·카페 원문 URL·본문 입력 → **Save** |
-| **커뮤니티 핵심 소개 (/about) 편집** | 소개 문구, 핵심 활동, 연혁, FAQ 수정 |
-| **사이트 디자인 테마 · 이벤트 배너 · 기본 설정** | 계절 테마, 배너, 사이트 이름, 카페 주소 등 |
+| **✨ 카페 글 올리기** (가장 많이 씀) | 카페 글 주소 + 본문 붙여넣기 → **Save**. AI가 제목·3줄 요약·개인정보 가림·카테고리를 처리해 1~2분 뒤 사이트에 발행 |
+| **📚 발행된 글 관리** | 올라간 글 수정, 📌 고정/해제, 비공개 전환, 직접 새 글 쓰기 |
+| **🏡 커뮤니티 소개 페이지 (/about) 편집** | 소개 문구, 핵심 활동, 연혁, FAQ 수정 |
+| **🎨 디자인 테마 · 이벤트 배너 · 기본 설정** | 계절 테마, 배너, 사이트 이름, 카페 주소 등 |
 
-- **상단 고정 공지**: 글 편집 화면에서 `상단 고정 (📌 중요 안내)` 스위치를 켜면 메인 화면 맨 위에 항상 보입니다.
-- **임시 저장**: `비공개 (임시 저장)`을 켜 두면 사이트에 공개되지 않습니다.
-- **파일 이름**: 새 글을 만들 때 파일 이름 칸이 보입니다. 이 이름이 글 주소(URL)가 됩니다. `2026-12-01-year-end-party`처럼 **영문 소문자·숫자·하이픈**으로 고쳐 주면 좋고, 기본값 그대로 둬도 됩니다.
-- 저장하면 GitHub Actions가 자동으로 사이트를 다시 만들어 **약 1~2분 뒤** 반영됩니다. (이때는 RSS 수집을 건너뛰고 빌드·배포만 하므로 가장 빠르게 반영됩니다)
+#### ✨ 카페 글 올리기 — 30초 사용법
+1. 네이버 카페에서 올릴 글을 엽니다.
+2. 주소창의 주소를 복사 → CMS **① 카페 글 주소**에 붙여넣기
+3. 글 본문을 **Ctrl+A → Ctrl+C** → CMS **② 카페 글 내용 붙여넣기**에 **Ctrl+V**
+4. (선택) **③ 사진**에 1~5장 올리기 — 첫 장이 대표 사진이 됩니다.
+5. (선택) 제목·카테고리·📌 고정·공개 방식은 비워 두면 AI와 기본값이 알아서 처리합니다.
+6. **Save** → 1~2분 뒤 사이트에서 확인
+
+- **같은 카페 글 주소로 다시 올리면** 새 글이 추가되지 않고 기존 글이 새 내용으로 바뀝니다. (카페에서 공지를 수정했을 때 편리)
+- **내용을 먼저 확인하고 싶으면** 공개 방식을 `비공개로 저장`으로 고르세요. 발행된 글 관리에서 확인한 뒤 `비공개` 스위치를 끄면 공개됩니다.
+- 저장한 항목은 처리되면 목록에서 사라집니다. **목록에 계속 남아 있으면** 그 항목을 열어 **처리 상태**에 적힌 이유를 확인하세요.
+- AI는 원문에 없는 날짜·장소·회비를 지어내지 않도록 설정되어 있지만, 중요한 공지는 발행 후 한 번 읽어 보시길 권합니다.
+
+#### 📚 발행된 글 관리
+- **상단 고정 공지**: `상단 고정 (📌 중요 안내)` 스위치를 켜면 메인 화면 맨 위에 항상 보입니다.
+- **비공개 전환**: `비공개 (임시 저장)`을 켜면 사이트에서 내려갑니다.
+- 저장하면 **약 1~2분 뒤** 사이트에 반영됩니다.
 
 ### 5단계. ⏱ 1분 만에 계절 테마·이벤트 배너 바꾸기
 
@@ -103,10 +117,10 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 
 ## 💡 운영 팁
 
-### 60일 동안 활동이 없으면 자동 수집이 멈춰요
+### 60일 동안 활동이 없으면 아침 자동 재시도가 멈춰요
 GitHub는 **60일 동안 저장소에 변경이 없으면** 예약 실행(매일 오전 8시 수집)을 자동으로 꺼 버립니다.
-- 다시 켜기: 저장소 **Actions** 탭 → 왼쪽 `Sync RSS & Deploy` → 노란 안내 막대의 **Enable workflow** 클릭
-- 미리 막기: 한 달에 한 번쯤 Pages CMS에서 글이나 설정을 저장하면 자동으로 연장됩니다. RSS로 새 글이 자동 커밋되는 동안에도 연장됩니다.
+- 다시 켜기: 저장소 **Actions** 탭 → 왼쪽 `Publish & Deploy` → 노란 안내 막대의 **Enable workflow** 클릭
+- CMS에서 저장할 때 실행되는 배포는 이와 상관없이 항상 동작합니다. 한 달에 한 번쯤 CMS에서 저장하면 예약 실행도 자동으로 연장됩니다.
 
 ### 카테고리를 새로 추가하고 싶다면
 1. Pages CMS → 기본 설정 → **카테고리 목록**에 새 이름 추가 (메인 화면 탭 순서)
@@ -139,15 +153,16 @@ GitHub는 **60일 동안 저장소에 변경이 없으면** 예약 실행(매일
 | 10 | 사실 창작 금지 + 개인정보 마스킹 | ✅ | 시스템 프롬프트 규칙 + 정규식 2차 필터(날짜·금액·URL 숫자는 보존하도록 보정) |
 | 11 | 빈 IndexNow 키 안전, `keyLocation` 전체 URL | ✅ | 키 없으면 키 파일 미생성·빌드 통과, 키 있으면 `/키.txt` 생성, `keyLocation`에 서브패스 포함 |
 | 12 | Pages CMS 디자인 제어, `.nojekyll` | ✅ | `about.json`·`siteConfig.json`의 모든 키가 CMS 필드와 일치(프로그램으로 대조), 한글 라벨 드롭다운 |
-| 13 | 네이버 이미지 핫링크·인코딩 방어 | ✅ | UTF-8·EUC-KR 피드 디코딩 확인, `Referer`·10초 타임아웃 이미지 저장, 실패 시 테마색 SVG 일러스트 |
-| 14 | 워크플로 스마트 분리 | ✅ | RSS 수집·자동 커밋은 예약·수동 실행 때만, CMS 저장(push)은 빌드·배포만 |
+| 13 | 네이버 이미지 핫링크·인코딩 방어 | ➖ (해당 없음) | RSS를 쓰지 않게 되어 제거. 사진은 운영자가 CMS로 직접 올리고, 없으면 테마색 SVG 일러스트 |
+| 14 | 워크플로 스마트 분리 | ✅ (변경) | RSS 대신 '카페 글 올리기' 항목이 있을 때만 AI 정리·자동 커밋, 없으면 바로 빌드·배포 (실측 약 35초) |
 | 15 | 공식 Gemini SDK | ✅ | `new GoogleGenAI({ apiKey })`, `ai.models.generateContent`, `Type`, `responseMimeType`·`responseSchema` |
 
 **실제 GitHub에서만 확인 가능한 항목**: GitHub Actions 실행·Pages 배포, 실제 Gemini 응답 품질, IndexNow 실제 접수, Pages CMS 화면 동작. 첫 배포 후 확인이 필요합니다.
 
 **스펙과 다르게 구현한 점**
 - **Astro 7** 사용: 스펙의 "Astro v5+"에 해당하며, 그 때문에 GitHub Actions는 Node 24로 실행합니다.
-- **반영 시간**: 스펙은 "20초 내 반영"이지만, 실제로는 의존성 설치·빌드·검색 색인·배포까지 **약 1~2분**이 걸립니다. RSS 수집을 건너뛰는 분리는 그대로 적용했습니다.
+- **반영 시간**: 스펙은 "20초 내 반영"이지만, 실측 배포 시간은 약 35초~1분입니다.
+- **RSS 자동 수집 → 카페 글 올리기(반자동)로 변경**: 네이버 카페 RSS 서비스가 제공되지 않고, 네이버 검색 API는 약관상 결과 저장·가공이 금지되어 있어서 바꿨습니다. Gemini 정리·개인정보 가림·사실 창작 금지 규칙은 그대로 적용됩니다.
 - **카테고리 선택지**: Pages CMS가 다른 파일에서 선택지를 읽지 못해 `.pages.yml`에 한 번 더 적어야 합니다(위 운영 팁 참고).
 
 ---
@@ -168,7 +183,7 @@ npm run dev
 - Tailwind CSS v4 + `@tailwindcss/vite` (구형 `@astrojs/tailwind` 미사용)
 - Pagefind 한국어 정적 검색, `@astrojs/sitemap`
 - Pages CMS (`.pages.yml`)
-- Node.js 24, `rss-parser`, `@google/genai` (`gemini-2.5-flash`), IndexNow
+- Node.js 24, `@google/genai` (`gemini-2.5-flash`), `yaml`, IndexNow
 - GitHub Actions → GitHub Pages
 
 ### 사이트 주소 자동 감지
@@ -178,7 +193,7 @@ npm run dev
 ### 디렉터리 구조
 ```
 .
-├── .github/workflows/sync-and-deploy.yml   # 수집(예약·수동) / 빌드·배포(항상) / IndexNow
+├── .github/workflows/sync-and-deploy.yml   # 카페 글 AI 정리 → 빌드·배포 → IndexNow
 ├── .pages.yml                               # Pages CMS 관리 화면 정의
 ├── astro.config.mjs                         # site·base 자동 감지, sitemap, Tailwind v4
 ├── public/
@@ -187,16 +202,17 @@ npm run dev
 │   └── images/
 │       ├── hero-default.svg                 # 기본 메인 배너 그림
 │       ├── og-default.png                   # 기본 SNS 공유 이미지
-│       ├── rss/                             # RSS 이미지 로컬 저장 (핫링크 차단 우회)
 │       └── uploads/                         # Pages CMS 업로드 이미지
 ├── scripts/
 │   ├── site-url.mjs                         # 주소 자동 계산 (config·스크립트 공용)
-│   ├── sync-rss.mjs                         # 네이버 RSS → Gemini → posts/*.md
+│   ├── process-inbox.mjs                    # ✨ 카페 글 올리기: src/inbox → Gemini 정리 → posts/*.md
+│   ├── lib/ai-writer.mjs                    # Gemini 호출·개인정보 가림·슬러그·Frontmatter 공용 모듈
 │   ├── markdown-base-path.mjs               # 본문 속 링크·이미지에 base 경로 적용
 │   └── indexnow-ping.mjs                    # IndexNow 즉시 색인 요청
 └── src/
     ├── content.config.ts                    # 게시글 스키마 (Zod)
     ├── content/posts/*.md                   # 게시글
+    ├── inbox/*.md                           # ✨ 카페 글 올리기 대기함 (처리되면 자동 삭제)
     ├── data/
     │   ├── siteConfig.json                  # 사이트·디자인·이벤트 배너 설정
     │   └── about.json                       # /about 소개·연혁·FAQ

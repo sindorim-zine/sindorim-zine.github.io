@@ -13,8 +13,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "sync:rss": "node scripts/sync-rss.mjs",
-    "indexnow": "node scripts/indexnow-ping.mjs"
+    "indexnow": "node scripts/indexnow-ping.mjs",
+    "inbox": "node scripts/process-inbox.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.10",
@@ -23,7 +23,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "astro": "^7.4.13",
     "pagefind": "^1.6.0",
-    "rss-parser": "^3.13.0",
-    "tailwindcss": "^4.3.5"
+    "tailwindcss": "^4.3.5",
+    "yaml": "^2.9.1"
   }
 }

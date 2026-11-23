@@ -1,14 +1,14 @@
-name: Sync RSS & Deploy
+name: Publish & Deploy
 
 on:
-  # 매일 한국시간 오전 8시 (UTC 23:00) 네이버 카페 RSS 자동 수집
+  # Pages CMS에서 저장하면(카페 글 올리기·글 수정·디자인 변경) 바로 실행
+  push:
+    branches: [main]
+  # 매일 한국시간 오전 8시 (UTC 23:00): 실패했던 '카페 글 올리기' 항목 자동 재시도
   schedule:
     - cron: '0 23 * * *'
   # GitHub Actions 화면에서 수동 실행
   workflow_dispatch:
-  # Pages CMS에서 글·디자인·이벤트 배너를 저장하면 바로 빌드·배포 (RSS 수집은 건너뜀)
-  push:
-    branches: [main]
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: sync-and-deploy
+  group: publish-and-deploy
   cancel-in-progress: false
 
 jobs:
@@ -44,31 +44,28 @@ jobs:
       - name: 의존성 설치
         run: npm ci --no-audit --no-fund
 
-      # ── 예약 실행·수동 실행일 때만: RSS 수집 → 자동 커밋 ──────────────────
-      - name: 네이버 카페 RSS 수집 + Gemini 정제
-        id: sync
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      # ── ✨ 카페 글 올리기: 붙여 넣은 글을 AI로 정리해 게시글로 발행 ─────────
+      - name: 카페 글 AI 정리 (받아쓰기 → 게시글)
+        id: inbox
         env:
-          NAVER_CAFE_RSS_URL: ${{ secrets.NAVER_CAFE_RSS_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node scripts/sync-rss.mjs
+        run: node scripts/process-inbox.mjs
 
-      - name: 새 글 자동 커밋 & 푸시
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      - name: 정리된 글 커밋 & 푸시
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/content/posts public/images/rss
+          git add -A src/content/posts src/inbox
           if git diff --cached --quiet; then
-            echo "새 글이 없어 커밋을 건너뜁니다."
+            echo "새로 정리된 글이 없습니다."
           else
-            git commit -m "chore(rss): 네이버 카페 새 글 자동 발행 [skip ci]"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(inbox): 카페 글 AI 정리 발행"
             # 기본 GITHUB_TOKEN으로 푸시하므로 이 푸시는 워크플로를 다시 실행하지 않습니다(무한 루프 방지).
             git pull --rebase --autostash origin main || true
-            git push || echo "푸시 실패: 이번 빌드에는 새 글이 포함되며, 다음 실행 때 다시 커밋됩니다."
+            git push || echo "푸시 실패: 이번 배포에는 새 글이 포함되며, 다음 실행 때 다시 커밋됩니다."
           fi
 
-      # ── 공통: 빌드 → 검색 색인 → 배포 ──────────────────────────────────────
+      # ── 빌드 → 검색 색인 → 배포 ────────────────────────────────────────────
       - name: Astro 빌드 + Pagefind 검색 색인
         run: |
           npx astro build
@@ -86,11 +83,6 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      # ── 배포 후: 신규/수정 URL을 IndexNow로 즉시 알림 ──────────────────────
-      - name: IndexNow 핑 (RSS 신규 글)
-        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.sync.outputs.new_posts != '0' && steps.sync.outputs.new_posts != ''
-        run: node scripts/indexnow-ping.mjs
-
-      - name: IndexNow 핑 (CMS에서 추가·수정한 글)
-        if: github.event_name == 'push'
+      # ── 배포 후: 새 글·수정된 글을 IndexNow로 즉시 알림 ───────────────────
+      - name: IndexNow 핑
         run: node scripts/indexnow-ping.mjs --changed
