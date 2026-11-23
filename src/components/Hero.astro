@@ -1,6 +1,6 @@
 ---
 import Icon from './Icon.astro';
-import Illustration from './Illustration.astro';
+import HeroArt from './HeroArt.astro';
 import { siteConfig } from '../utils/site';
 import { withBase } from '../utils/url';
 
@@ -8,7 +8,9 @@ const { heroStyle } = siteConfig.design;
 const title = siteConfig.heroTitle || siteConfig.siteTitle;
 const titleLines = title.split(/\n/);
 const subtitle = siteConfig.heroSubtitle;
-const image = siteConfig.heroImage ? withBase(siteConfig.heroImage) : '';
+// 기본 그림(hero-default.svg)이거나 비어 있으면, 테마 색을 따라 바뀌는 그림(HeroArt)을 씁니다.
+const customImage = siteConfig.heroImage && !siteConfig.heroImage.endsWith('/images/hero-default.svg') ? siteConfig.heroImage : '';
+const image = customImage ? withBase(customImage) : '';
 const cafeUrl = siteConfig.cafeUrl;
 ---
 {heroStyle === 'magazine-card' && (
@@ -33,7 +35,7 @@ const cafeUrl = siteConfig.cafeUrl;
         {image ? (
           <img src={image} alt="" width="800" height="640" fetchpriority="high" decoding="async" />
         ) : (
-          <Illustration variant="local" class="h-full w-full" label="도림천 일러스트" />
+          <HeroArt class="block h-full w-full" />
         )}
       </div>
     </div>
@@ -45,7 +47,7 @@ const cafeUrl = siteConfig.cafeUrl;
     {image ? (
       <img class="hero-bg" src={image} alt="" width="1600" height="900" fetchpriority="high" decoding="async" />
     ) : (
-      <Illustration variant="local" class="hero-bg" label="도림천 일러스트" />
+      <HeroArt class="hero-bg" />
     )}
     <div class="hero-content container-page flex flex-col gap-5 pb-12 pt-24 md:pb-16">
       <p class="text-sm font-bold uppercase tracking-[0.14em] text-white/85">Sindorim Community</p>

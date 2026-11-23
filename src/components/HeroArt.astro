@@ -1,0 +1,60 @@
+---
+// 메인 배너 기본 그림 (도림천과 다리). 테마 색 변수만 사용하므로 컬러 테마를 바꾸면 그림 색도 함께 바뀝니다.
+// 운영자가 CMS에서 '메인 배너 이미지'를 직접 올리면 이 그림 대신 그 사진이 쓰입니다.
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1600 1000"
+  preserveAspectRatio="xMidYMid slice"
+  class={className}
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient id="hero-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" style="stop-color: var(--bg-primary)" />
+      <stop offset="1" style="stop-color: var(--bg-subtle)" />
+    </linearGradient>
+    <linearGradient id="hero-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" style="stop-color: var(--accent-secondary)" />
+      <stop offset="1" style="stop-color: var(--accent-primary)" stop-opacity="0.85" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#hero-sky)" />
+  <circle cx="1240" cy="230" r="110" style="fill: var(--accent-secondary)" opacity="0.45" />
+  <!-- 먼 건물 -->
+  <g style="fill: var(--border-color)">
+    <rect x="120" y="360" width="90" height="260" rx="6" />
+    <rect x="230" y="300" width="120" height="320" rx="6" />
+    <rect x="370" y="390" width="80" height="230" rx="6" />
+    <rect x="980" y="330" width="110" height="290" rx="6" />
+    <rect x="1110" y="380" width="90" height="240" rx="6" />
+    <rect x="1220" y="280" width="140" height="340" rx="6" />
+    <rect x="1380" y="400" width="90" height="220" rx="6" />
+  </g>
+  <!-- 언덕과 나무 -->
+  <path d="M0 600 C 260 540, 520 610, 800 570 S 1340 540, 1600 590 L1600 1000 L0 1000 Z" style="fill: var(--accent-soft)" />
+  <g style="fill: var(--accent-secondary)">
+    <ellipse cx="180" cy="560" rx="48" ry="70" />
+    <ellipse cx="300" cy="575" rx="38" ry="56" />
+    <ellipse cx="1330" cy="560" rx="50" ry="72" />
+    <ellipse cx="1450" cy="580" rx="36" ry="54" />
+  </g>
+  <g style="stroke: var(--accent-primary)" stroke-width="10" stroke-linecap="round" opacity="0.7">
+    <path d="M180 620v-40M300 625v-35M1330 625v-45M1450 630v-35" />
+  </g>
+  <!-- 도림천 -->
+  <path d="M0 760 C 300 700, 560 800, 820 740 S 1320 700, 1600 750 L1600 860 C 1320 820, 1080 880, 800 850 S 260 820, 0 870 Z" fill="url(#hero-water)" opacity="0.75" />
+  <path d="M120 790 C 260 770, 380 800, 520 785 M900 770 C 1040 755, 1180 780, 1320 765" style="stroke: var(--bg-primary)" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8" />
+  <!-- 다리 -->
+  <g style="stroke: var(--accent-ink)" stroke-linecap="round" fill="none">
+    <path d="M520 700 Q 800 520 1080 700" stroke-width="16" />
+    <path d="M480 700 L1120 700" stroke-width="16" />
+    <path d="M600 700v-70M680 700v-112M760 700v-138M840 700v-138M920 700v-112M1000 700v-70" stroke-width="8" />
+  </g>
+  <!-- 산책로 -->
+  <path d="M0 920 C 400 880, 900 940, 1600 900 L1600 1000 L0 1000 Z" style="fill: var(--bg-subtle)" />
+</svg>
