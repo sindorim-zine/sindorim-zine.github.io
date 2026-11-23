@@ -109,4 +109,5 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          STORAGE_WARN_MB: '1' # 알림 시험용 임시 기준 (시험 후 되돌림)
         run: node scripts/check-storage.mjs
