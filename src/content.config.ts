@@ -26,6 +26,7 @@ const posts = defineCollection({
     eventDate: optionalDay,
     eventEndDate: optionalDay,
     eventLabel: optionalText,
+    eventLocation: optionalText,
     category: z.string(),
     summary: z.string().default(''),
     pinned: z.boolean().default(false),

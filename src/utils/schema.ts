@@ -1,5 +1,5 @@
 // Schema.org JSON-LD 생성기. 검색엔진·AI가 이 사이트를 카페의 '공식 출처'로 인식하도록 돕습니다.
-import { about, siteConfig, thumbnailOf, type Post } from './site';
+import { about, eventOf, siteConfig, thumbnailOf, type Post } from './site';
 import { absoluteUrl, isHttpUrl, postPath } from './url';
 
 type Site = URL | string | undefined;
@@ -20,7 +20,10 @@ export function organizationSchema(site: Site) {
     '@type': 'Organization',
     '@id': orgId(site),
     name: siteConfig.siteTitle,
-    alternateName: siteConfig.representativeName,
+    ...(siteConfig.alternateNames.length ? { alternateName: siteConfig.alternateNames } : {}),
+    ...(siteConfig.subOrganizations.length
+      ? { subOrganization: siteConfig.subOrganizations.map((name) => ({ '@type': 'Organization', name, parentOrganization: { '@id': orgId(site) } })) }
+      : {}),
     url: absoluteUrl('/', site),
     description: siteConfig.siteDescription,
     logo: absoluteUrl('/favicon.svg', site),
@@ -121,6 +124,37 @@ export function blogPostingSchema(post: Post, site: Site) {
   };
   if (thumb) data.image = absoluteUrl(thumb, site);
   if (isHttpUrl(post.data.originalUrl)) data.isBasedOn = post.data.originalUrl;
+  return data;
+}
+
+/**
+ * 행사 구조화 데이터(Event). 행사 날짜가 있는 글에만 만듭니다.
+ * '접수 마감·신청 마감'처럼 행사 당일이 아닌 날짜는 행사로 표시하지 않습니다.
+ * 장소는 원문에 적혀 있을 때만 넣습니다(지어내지 않음).
+ */
+export function eventSchema(post: Post, site: Site) {
+  const event = eventOf(post);
+  if (!event || /마감/.test(event.label)) return null;
+  const url = absoluteUrl(postPath(post.id), site);
+  const thumb = thumbnailOf(post);
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: post.data.title,
+    startDate: event.start,
+    endDate: event.end,
+    description: post.data.summary,
+    url,
+    inLanguage: 'ko-KR',
+    eventStatus: 'https://schema.org/EventScheduled',
+    organizer: { '@id': orgId(site), '@type': 'Organization', name: siteConfig.siteTitle, url: absoluteUrl('/', site) },
+  };
+  if (thumb) data.image = absoluteUrl(thumb, site);
+  if (event.location) {
+    data.eventAttendanceMode = 'https://schema.org/OfflineEventAttendanceMode';
+    data.location = { '@type': 'Place', name: event.location, address: { '@type': 'PostalAddress', streetAddress: event.location, addressLocality: '구로구', addressRegion: '서울특별시', addressCountry: 'KR' } };
+  }
+  if (isHttpUrl(post.data.originalUrl)) data.sameAs = post.data.originalUrl;
   return data;
 }
 

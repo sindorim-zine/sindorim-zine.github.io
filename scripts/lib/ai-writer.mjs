@@ -6,7 +6,7 @@
 import { createHash } from 'node:crypto';
 
 export const MODEL = (process.env.GEMINI_MODEL || 'gemini-3.8-flash').trim();
-export const DEFAULT_CATEGORIES = ['공지사항', '모임·행사', '동네 소식', '생활 정보', '맛집·카페'];
+export const DEFAULT_CATEGORIES = ['공지사항', '모임·행사', '봉사·기부', '동네 소식', '생활 정보', '맛집·카페'];
 
 // ---------------------------------------------------------------------------
 // 개인정보 2차 필터
@@ -76,7 +76,7 @@ export function fixEscapedNewlines(text) {
 }
 
 /** 행사 날짜 검증: YYYY-MM-DD 형식이고 게시일 기준 1년 전~2년 뒤 범위만 인정 */
-export function cleanEventDates({ eventDate, eventEndDate, eventLabel }, pubDate) {
+export function cleanEventDates({ eventDate, eventEndDate, eventLabel, eventLocation }, pubDate) {
   const isDay = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) && !Number.isNaN(Date.parse(v.trim()));
   const base = Date.parse(pubDate || kstDateString());
   const inRange = (v) => {
@@ -87,10 +87,11 @@ export function cleanEventDates({ eventDate, eventEndDate, eventLabel }, pubDate
   if (!start) return {};
   const end = isDay(eventEndDate) && eventEndDate.trim() > start && inRange(eventEndDate.trim()) ? eventEndDate.trim() : '';
   const label = String(eventLabel || '').trim().slice(0, 12) || '행사일';
-  return { eventDate: start, ...(end ? { eventEndDate: end } : {}), eventLabel: label };
+  const location = String(eventLocation || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  return { eventDate: start, ...(end ? { eventEndDate: end } : {}), eventLabel: label, ...(location ? { eventLocation: location } : {}) };
 }
 
-export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
+export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, eventLocation, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
   const lines = [
     '---',
     `title: ${JSON.stringify(title)}`,
@@ -99,6 +100,7 @@ export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, even
     ...(eventDate ? [`eventDate: ${JSON.stringify(eventDate)}`] : []),
     ...(eventEndDate ? [`eventEndDate: ${JSON.stringify(eventEndDate)}`] : []),
     ...(eventDate && eventLabel ? [`eventLabel: ${JSON.stringify(eventLabel)}`] : []),
+    ...(eventDate && eventLocation ? [`eventLocation: ${JSON.stringify(eventLocation)}`] : []),
     `category: ${JSON.stringify(category)}`,
     `summary: ${JSON.stringify(summary)}`,
     `pinned: ${pinned ? 'true' : 'false'}`,
@@ -134,14 +136,15 @@ function systemInstruction(categories) {
 - cleanTitle: 외부 사용자가 ChatGPT·Gemini·네이버에 질문할 법한 자연스러운 한국어 제목. 원문 사실 범위 안에서 "신도림" 같은 지역·맥락 키워드를 자연스럽게 포함. 40자 안팎.
 - urlSlug: 제목 의미를 담은 영문 소문자·숫자·하이픈 3~6단어 (예: sindorim-year-end-party-guide). 한글·공백·특수문자 금지.
 - summary: 원문 사실만으로 쓴 정확히 3문장의 핵심 요약.
-- category: 다음 중 하나만 선택: ${categories.join(', ')}
+- category: 다음 중 하나만 선택: ${categories.join(', ')} (봉사활동·기부·나눔·후원이 중심인 글은 봉사·기부가 있으면 그것을 고르세요)
 - markdownBody: 한국어 마크다운 본문. 첫 줄에 제목(#)을 쓰지 마세요. 필요하면 ## 소제목, 목록, 굵은 글씨로 읽기 쉽게 정리하되 원문의 중요한 정보는 빠뜨리지 마세요. 줄바꿈은 실제 줄바꿈 문자로 쓰고 "\\n" 같은 글자로 쓰지 마세요.
 
 [행사 날짜 — 다가오는 행사순 정렬에 쓰임]
 - eventDate: 독자가 가장 알아야 할 날짜를 YYYY-MM-DD로. 모임·행사는 행사 당일(여러 날이면 시작일), 공모·신청·모집은 접수 마감일, 이벤트는 시작일.
 - eventEndDate: 기간이 있는 경우의 마지막 날 (YYYY-MM-DD). 하루짜리면 빈 문자열.
 - eventLabel: 그 날짜의 의미를 2~6글자로. 예: "행사일", "모임일", "접수 마감", "신청 마감", "이벤트 기간", "행사 기간".
-- 원문에 구체적인 날짜가 없으면 세 값 모두 빈 문자열로 두세요. 날짜를 추측하거나 지어내지 마세요.
+- eventLocation: 원문에 장소가 구체적으로 적혀 있을 때만 그 이름을 그대로 (예: "도림천 신도림교 아래", "신도림역 2번 출구 앞"). 온라인 접수·장소 미기재면 빈 문자열. 개인 집 주소·동호수는 절대 넣지 마세요.
+- 원문에 구체적인 날짜가 없으면 날짜·이름·장소 모두 빈 문자열로 두세요. 날짜나 장소를 추측하거나 지어내지 마세요.
 - 원문에 연도가 없으면 게시일을 기준으로 그 이후 가장 가까운 해의 날짜로 정하세요(예: 게시일이 2026-11-23이고 원문이 "1월 5일"이면 2027-01-05).`;
 }
 
@@ -182,9 +185,10 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
           eventDate: { type: Type.STRING, description: '핵심 행사 날짜 YYYY-MM-DD, 없으면 빈 문자열' },
           eventEndDate: { type: Type.STRING, description: '기간 마지막 날 YYYY-MM-DD, 없으면 빈 문자열' },
           eventLabel: { type: Type.STRING, description: '날짜 의미 2~6글자, 없으면 빈 문자열' },
+          eventLocation: { type: Type.STRING, description: '원문에 적힌 행사 장소 이름, 없으면 빈 문자열' },
         },
-        required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel'],
-        propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel'],
+        required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
+        propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
       },
     },
   });

@@ -64,6 +64,8 @@ content:
               label: 공지사항
             - name: 모임·행사
               label: 모임·행사
+            - name: 봉사·기부
+              label: 봉사·기부
             - name: 동네 소식
               label: 동네 소식
             - name: 생활 정보
@@ -137,7 +139,7 @@ content:
         required: true
         default: 공지사항
         options:
-          values: [공지사항, 모임·행사, 동네 소식, 생활 정보, 맛집·카페]
+          values: [공지사항, 모임·행사, 봉사·기부, 동네 소식, 생활 정보, 맛집·카페]
       - name: summary
         label: 3줄 요약
         type: text
@@ -175,6 +177,9 @@ content:
           format: yyyy-MM-dd
       - name: eventLabel
         label: 행사 날짜 이름 (예 행사일, 접수 마감, 이벤트 기간)
+        type: string
+      - name: eventLocation
+        label: 📍 행사 장소 (선택 — 원문에 적힌 장소만, 예 도림천 신도림교 아래)
         type: string
       - name: body
         label: 본문
@@ -441,6 +446,16 @@ content:
           - name: url
             label: 링크 (/about 또는 https://...)
             type: string
+      - name: alternateNames
+        label: 🏷️ 단체의 다른 이름 (별칭)
+        type: string
+        list: true
+        description: 카페 이름·줄임말처럼 같은 단체를 가리키는 이름들. AI·검색엔진이 하나의 단체로 인식하도록 돕습니다. 예) 신커, 신커 [신도림커뮤니티]
+      - name: subOrganizations
+        label: 🤝 함께 활동하는 단체
+        type: string
+        list: true
+        description: 커뮤니티 안에서 활동하는 봉사단·소모임 이름. 예) 신커봉사단
       - name: footerText
         label: 하단 안내 문구
         type: text

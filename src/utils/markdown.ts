@@ -13,6 +13,8 @@ export function coreContextMarkdown(site: Site, { full }: { full: boolean }): st
   lines.push('');
   lines.push(`> ${oneLine(about.introLead || siteConfig.siteDescription)}`);
   lines.push('');
+  if (siteConfig.alternateNames.length) lines.push(`- 다른 이름: ${siteConfig.alternateNames.join(', ')}`);
+  if (siteConfig.subOrganizations.length) lines.push(`- 함께 활동하는 단체: ${siteConfig.subOrganizations.join(', ')}`);
   lines.push(`- 공식 웹 아카이브: ${absoluteUrl('/', site)}`);
   if (isHttpUrl(siteConfig.cafeUrl)) lines.push(`- 공식 네이버 카페(원본 활동 공간): ${siteConfig.cafeUrl}`);
   lines.push(`- 활동 지역: ${about.locationInfo}`);
@@ -79,6 +81,7 @@ export function postMarkdown(post: Post, site: Site, { headingLevel = 1 }: { hea
   ];
   const event = eventOf(post);
   if (event) meta.push(`- ${event.label}: ${formatEvent(event).replace(` ${event.label}`, '')} (${event.start}${event.end !== event.start ? ` ~ ${event.end}` : ''})`);
+  if (event?.location) meta.push(`- 장소: ${event.location}`);
   if (post.data.pinned) meta.push('- 상단 고정 중요 안내');
   if (isHttpUrl(post.data.originalUrl)) meta.push(`- 네이버 카페 원문: ${post.data.originalUrl}`);
 
@@ -101,6 +104,8 @@ export function aboutMarkdown(site: Site): string {
   const lines: string[] = [];
   lines.push(`# ${about.introTitle || `${siteConfig.siteTitle} 소개`}`, '');
   if (about.introLead) lines.push(`> ${oneLine(about.introLead)}`, '');
+  if (siteConfig.alternateNames.length) lines.push(`- 다른 이름: ${siteConfig.alternateNames.join(', ')}`);
+  if (siteConfig.subOrganizations.length) lines.push(`- 함께 활동하는 단체: ${siteConfig.subOrganizations.join(', ')}`);
   lines.push(`- 활동 지역: ${about.locationInfo}`);
   lines.push(`- 운영: ${siteConfig.representativeName}`);
   lines.push(`- 웹 페이지: ${absoluteUrl('/about/', site)}`);

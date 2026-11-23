@@ -25,9 +25,21 @@ const paragraphs = about.introBody.split(/\n{2,}/).map((p) => p.trim()).filter(B
       <p class="eyebrow mb-3">About Us</p>
       <h1 class="text-3xl font-bold sm:text-4xl">{about.introTitle}</h1>
       {about.introLead && <p class="mt-5 text-lg leading-relaxed text-muted">{about.introLead}</p>}
-      <p class="mt-5 inline-flex items-center gap-1.5 text-sm text-muted">
-        <Icon name="map-pin" size={15} /> {about.locationInfo}
-      </p>
+      <dl class="mt-5 grid gap-1.5 text-sm text-muted">
+        <div class="flex items-center gap-1.5">
+          <Icon name="map-pin" size={15} /><dt class="sr-only">활동 지역</dt><dd>{about.locationInfo}</dd>
+        </div>
+        {siteConfig.alternateNames.length > 0 && (
+          <div class="flex items-center gap-1.5">
+            <Icon name="users" size={15} /><dt>다른 이름</dt><dd class="text-ink">{siteConfig.alternateNames.join(' · ')}</dd>
+          </div>
+        )}
+        {siteConfig.subOrganizations.length > 0 && (
+          <div class="flex items-center gap-1.5">
+            <Icon name="heart" size={15} /><dt>함께하는 단체</dt><dd class="text-ink">{siteConfig.subOrganizations.join(' · ')}</dd>
+          </div>
+        )}
+      </dl>
     </header>
 
     {paragraphs.length > 0 && (

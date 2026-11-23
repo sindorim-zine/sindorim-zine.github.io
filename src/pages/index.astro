@@ -24,7 +24,7 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
 // 운영자가 기본 정렬을 바꾸면 키도 바뀌어, 기존 방문자에게도 새 기본 정렬이 먼저 적용됩니다.
 const sortStorageKey = `sindorim-sort-pref-${defaultSort}`;
 const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', oldest: '처음부터 보는 소식', title: '제목순 소식' };
-const illustrationVariants = ['notice', 'meetup', 'local', 'life', 'food'] as const;
+const illustrationVariants = ['notice', 'meetup', 'local', 'life', 'food', 'volunteer'] as const;
 const feedUrl = withBase('/feed.json');
 ---
 <BaseLayout jsonLd={[organizationSchema(Astro.site), websiteSchema(Astro.site)]}>

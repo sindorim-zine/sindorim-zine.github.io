@@ -33,6 +33,12 @@ function text(value: unknown, fallback = ''): string {
 
 type NavItem = { label: string; url: string };
 
+/** CMS 목록 값 → 빈 칸·중복을 뺀 문자열 배열 */
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((v): v is string => typeof v === 'string').map((v) => v.trim()).filter(Boolean))];
+}
+
 /** 'HTML 파일' 확인 방식의 파일 이름 (예: googledce5aa01442ce970.html, naver1a2b3c.html) */
 const VERIFY_FILE_RE = /\b((?:google|naver)[0-9a-f]{8,64}\.html)\b/i;
 
@@ -76,6 +82,10 @@ export const siteConfig = {
     ? (raw.navigation as NavItem[]).filter((n) => n && typeof n.label === 'string' && typeof n.url === 'string' && n.url)
     : [],
   footerText: text(raw.footerText),
+  // 같은 단체를 가리키는 다른 이름들 (AI·검색엔진이 하나의 단체로 묶도록)
+  alternateNames: stringList(raw.alternateNames).filter((n) => n !== text(raw.siteTitle)),
+  // 함께 활동하는 하위 단체 (예: 신커봉사단)
+  subOrganizations: stringList(raw.subOrganizations),
   design: {
     themePreset: pick<ThemePreset>(rawDesign.themePreset, THEME_PRESETS, 'sage'),
     heroStyle: pick<HeroStyle>(rawDesign.heroStyle, HERO_STYLES, 'magazine-card'),
@@ -150,14 +160,14 @@ export const SORT_OPTIONS = [
 export type SortMode = (typeof SORT_OPTIONS)[number]['value'];
 
 // ── 행사 정보 ────────────────────────────────────────────────────────────
-export type EventInfo = { start: string; end: string; label: string };
+export type EventInfo = { start: string; end: string; label: string; location: string };
 
 /** 글의 행사 정보 (없으면 null). 종료일이 없거나 시작일보다 앞서면 시작일과 같게 봅니다. */
 export function eventOf(post: Post): EventInfo | null {
   const start = post.data.eventDate;
   if (!start) return null;
   const end = post.data.eventEndDate && post.data.eventEndDate >= start ? post.data.eventEndDate : start;
-  return { start, end, label: (post.data.eventLabel ?? '').trim() || '행사일' };
+  return { start, end, label: (post.data.eventLabel ?? '').trim() || '행사일', location: (post.data.eventLocation ?? '').trim() };
 }
 
 /** 한국 시간 기준 오늘 날짜 'YYYY-MM-DD' */
@@ -245,17 +255,18 @@ export function thumbnailOf(post: Post): string | null {
   return value ? value : null;
 }
 
-export type IllustrationVariant = 'notice' | 'meetup' | 'local' | 'life' | 'food';
+export type IllustrationVariant = 'notice' | 'meetup' | 'local' | 'life' | 'food' | 'volunteer';
 
 /** 카테고리 이름으로 기본 일러스트를 고릅니다. 새 카테고리도 자동으로 하나가 배정됩니다. */
 export function illustrationFor(category: string): IllustrationVariant {
   const c = category || '';
   if (/공지|안내|알림/.test(c)) return 'notice';
+  if (/봉사|기부|나눔|후원/.test(c)) return 'volunteer';
   if (/모임|행사|이벤트|축제/.test(c)) return 'meetup';
   if (/맛집|카페|음식|식당|먹/.test(c)) return 'food';
   if (/생활|정보|팁|육아|교육/.test(c)) return 'life';
   if (/동네|소식|뉴스|지역/.test(c)) return 'local';
-  const variants: IllustrationVariant[] = ['local', 'meetup', 'life', 'food', 'notice'];
+  const variants: IllustrationVariant[] = ['local', 'meetup', 'life', 'food', 'notice', 'volunteer'];
   let hash = 0;
   for (const ch of c) hash = (hash * 31 + ch.codePointAt(0)!) >>> 0;
   return variants[hash % variants.length];

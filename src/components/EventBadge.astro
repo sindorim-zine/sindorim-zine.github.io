@@ -13,4 +13,7 @@ const { event, size = 'sm' } = Astro.props;
   <Icon name="calendar" size={size === 'lg' ? 16 : 13} />
   <time datetime={event.start}>{formatEvent(event)}</time>
   <span class="event-dday" data-dday hidden></span>
+  {size === 'lg' && event.location && (
+    <span class="inline-flex items-center gap-1 text-muted"><Icon name="map-pin" size={14} />{event.location}</span>
+  )}
 </p>

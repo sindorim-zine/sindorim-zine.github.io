@@ -78,4 +78,16 @@ const { variant, class: className = '', label } = Astro.props;
       <path d="M235 225 Q220 205 235 185 Q250 165 235 145" opacity="0.6" />
     </g>
   )}
+
+  {variant === 'volunteer' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 두 손으로 받쳐 든 하트 -->
+      <path d="M200 262 Q150 226 150 190 Q150 160 176 160 Q194 160 200 178 Q206 160 224 160 Q250 160 250 190 Q250 226 200 262 Z" fill="currentColor" opacity="0.9" stroke="none" />
+      <path d="M200 300 Q150 300 118 276 Q100 262 92 240 Q88 226 100 222 Q112 220 118 234 Q126 252 146 262" fill="var(--bg-surface)" />
+      <path d="M200 300 Q250 300 282 276 Q300 262 308 240 Q312 226 300 222 Q288 220 282 234 Q274 252 254 262" fill="var(--bg-surface)" />
+      <path d="M200 300 L200 282" opacity="0.6" />
+      <path d="M128 288 Q132 330 150 372 M272 288 Q268 330 250 372" />
+      <path d="M150 372 L250 372" opacity="0.4" />
+    </g>
+  )}
 </svg>
