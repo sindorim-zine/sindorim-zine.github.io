@@ -42,7 +42,18 @@ async function resolveKey() {
 
 function changedPostPaths() {
   try {
-    const output = execSync('git diff --name-only --diff-filter=AM HEAD~1 HEAD -- src/content/posts', {
+    // push 직전 커밋(BEFORE_SHA)부터 지금까지 바뀐 글. 없거나 찾을 수 없으면 직전 커밋 하나만 비교
+    const before = (process.env.BEFORE_SHA || '').trim();
+    let range = 'HEAD~1';
+    if (/^[0-9a-f]{40}$/.test(before) && !/^0+$/.test(before)) {
+      try {
+        execSync(`git cat-file -e ${before}^{commit}`, { cwd: ROOT, stdio: 'ignore' });
+        range = before;
+      } catch {
+        // 기록에 없으면 HEAD~1 사용
+      }
+    }
+    const output = execSync(`git diff --name-only --diff-filter=AM ${range} HEAD -- src/content/posts`, {
       cwd: ROOT,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],

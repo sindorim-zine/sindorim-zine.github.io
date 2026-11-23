@@ -40,6 +40,14 @@ const fontCss = fontStylesheets(headingFont, bodyFont);
 const fontVars = `--font-heading:${headingDef.stack};--font-body:${bodyDef.stack};--heading-weight:${headingDef.singleWeight ? 400 : 700};${headingDef.sizeAdjust ? `--heading-size-adjust:${headingDef.sizeAdjust};` : ''}`;
 const pageTitle = title ? `${title} | ${siteConfig.siteTitle}` : siteConfig.siteTitle;
 const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
+// 검색 결과 설명은 150자 안팎에서 문장 단위로 자릅니다(구글은 약 155자 이후를 잘라 표시).
+const metaDescription = (() => {
+  const text = (description || '').replace(/\s+/g, ' ').trim();
+  if (text.length <= 155) return text;
+  const cut = text.slice(0, 155);
+  const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  return end > 60 ? cut.slice(0, end + 1).trim() : cut.replace(/\s+\S*$/, '') + '…';
+})();
 // SVG는 SNS 미리보기에서 지원되지 않는 경우가 많아 PNG 기본 이미지로 대체합니다.
 const rasterImage = image && !/\.svg($|\?)/i.test(image) ? image : null;
 const heroRaster = siteConfig.heroImage && !/\.svg($|\?)/i.test(siteConfig.heroImage) ? siteConfig.heroImage : null;
@@ -53,8 +61,9 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    <meta name="description" content={metaDescription} />
+    {/* 검색 제외 페이지(404 등)에는 대표 주소를 넣지 않습니다. */}
+    {!noindex && <link rel="canonical" href={canonical} />}
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content={themeColor} />
     <meta name="generator" content={Astro.generator} />
@@ -74,7 +83,7 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:title" content={title ?? siteConfig.siteTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     {publishedTime && <meta property="article:published_time" content={publishedTime} />}
     <meta name="twitter:card" content="summary_large_image" />

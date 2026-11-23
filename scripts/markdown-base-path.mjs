@@ -29,8 +29,13 @@ export default function basePathHastPlugin(rawBase = '/') {
     element: {
       filter: Object.keys(ATTRS),
       visit(node, ctx) {
-        if (!base) return;
         const props = node.properties || {};
+        // 본문 사진은 화면에 보일 때 불러오도록(첫 화면 속도 향상)
+        if (node.tagName === 'img') {
+          if (props.loading == null) ctx.setProperty(node, 'loading', 'lazy');
+          if (props.decoding == null) ctx.setProperty(node, 'decoding', 'async');
+        }
+        if (!base) return;
         for (const key of ATTRS[node.tagName] || []) {
           const value = props[key];
           if (value == null) continue;

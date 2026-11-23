@@ -34,7 +34,7 @@ jobs:
       - name: 저장소 가져오기
         uses: actions/checkout@v7
         with:
-          fetch-depth: 2
+          fetch-depth: 20 # IndexNow가 이번 push로 바뀐 글을 정확히 찾도록 최근 기록을 함께 받음
 
       - name: Node.js 준비
         uses: actions/setup-node@v7
@@ -67,7 +67,11 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "chore(inbox): 카페 글 AI 정리·사진 압축"
             # 기본 GITHUB_TOKEN으로 푸시하므로 이 푸시는 워크플로를 다시 실행하지 않습니다(무한 루프 방지).
-            git pull --rebase --autostash origin main || true
+            # 그사이 CMS 저장 등으로 원격이 바뀌었으면 합쳐서 올리고, 충돌하면 깨끗이 되돌린 뒤 다음 실행에 맡깁니다.
+            if ! git pull --rebase --autostash origin main; then
+              git rebase --abort || true
+              echo "원격 변경과 충돌해 이번에는 올리지 않습니다. 다음 실행 때 다시 처리됩니다."
+            fi
             git push || echo "푸시 실패: 이번 배포에는 새 글이 포함되며, 다음 실행 때 다시 커밋됩니다."
           fi
 
@@ -103,7 +107,10 @@ jobs:
 
       # ── 배포 후: 새 글·수정된 글을 IndexNow로 즉시 알림 ───────────────────
       - name: IndexNow 핑
-        run: node scripts/indexnow-ping.mjs --changed
+        env:
+          # push일 때만 이번에 바뀐 글을 알림(예약·수동 실행에서는 새로 발행된 글만)
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node scripts/indexnow-ping.mjs ${{ github.event_name == 'push' && '--changed' || '' }}
 
       # ── 용량 점검: 700MB를 넘으면 '[용량 알림]' 이슈 등록 → GitHub가 이메일로 알림 ──
       - name: 용량 점검

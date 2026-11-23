@@ -27,7 +27,13 @@ export async function optimizeImage(input, originalExt = '') {
 
   const width = meta.width ?? 0;
   if ((format === 'jpeg' || format === 'webp') && input.length <= SMALL_ENOUGH && width <= MAX_WIDTH) {
-    return { buffer: input, ext: format === 'jpeg' ? 'jpg' : 'webp', changed: false, width };
+    const ext = format === 'jpeg' ? 'jpg' : 'webp';
+    // 이미 가벼워도 촬영 정보(EXIF·GPS 위치)가 있으면 지웁니다(개인정보 보호). 방향은 미리 바로잡음.
+    if (meta.exif || meta.xmp || meta.iptc) {
+      const stripped = await sharp(input, { failOn: 'none' }).rotate().toFormat(format, format === 'jpeg' ? { quality: 90, mozjpeg: true } : { quality: 90 }).toBuffer();
+      return { buffer: stripped, ext, changed: true, width };
+    }
+    return { buffer: input, ext, changed: false, width };
   }
 
   let opaque = true;

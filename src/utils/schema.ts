@@ -103,13 +103,19 @@ export function blogPostingSchema(post: Post, site: Site) {
     headline: post.data.title,
     description: post.data.summary,
     datePublished: post.data.pubDate.toISOString(),
-    dateModified: post.data.pubDate.toISOString(),
+    // 실제 발행(또는 다시 올린) 시각이 작성일보다 뒤면 수정일로 사용
+    dateModified: (post.data.publishedAt && post.data.publishedAt > post.data.pubDate ? post.data.publishedAt : post.data.pubDate).toISOString(),
     inLanguage: 'ko-KR',
     articleSection: post.data.category,
     url,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     author: { '@type': 'Organization', name: siteConfig.representativeName, url: absoluteUrl('/about/', site) },
-    publisher: { '@id': orgId(site), '@type': 'Organization', name: siteConfig.siteTitle },
+    publisher: {
+      '@id': orgId(site),
+      '@type': 'Organization',
+      name: siteConfig.siteTitle,
+      logo: { '@type': 'ImageObject', url: absoluteUrl('/images/og-default.png', site) },
+    },
     isPartOf: { '@id': websiteId(site) },
     contentLocation: { '@type': 'Place', name: AREA },
   };

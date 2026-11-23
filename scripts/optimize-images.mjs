@@ -32,15 +32,20 @@ async function walk(dir) {
 
 const toPublic = (abs) => '/' + path.relative(path.join(ROOT, 'public'), abs).split(path.sep).join('/');
 
-async function replaceReferences(oldPublic, newPublic) {
+/** 글·설정 파일에서 사진 경로를 바꿉니다. 공백·한글이 인코딩된(%20 등) 형태도 함께 찾습니다. */
+async function replaceReferences(oldPublic, newPublic, { dryRun = false } = {}) {
+  const forms = [...new Set([oldPublic, encodeURI(oldPublic)])];
   let count = 0;
   for (const dir of REFERENCE_DIRS) {
     for (const file of await walk(dir)) {
       if (!/\.(md|json)$/.test(file)) continue;
       const text = await readFile(file, 'utf8');
-      if (!text.includes(oldPublic)) continue;
-      await writeFile(file, text.split(oldPublic).join(newPublic), 'utf8');
+      if (!forms.some((f) => text.includes(f))) continue;
       count++;
+      if (dryRun) continue;
+      let next = text;
+      for (const f of forms) next = next.split(f).join(f === oldPublic ? newPublic : encodeURI(newPublic));
+      await writeFile(file, next, 'utf8');
     }
   }
   return count;
@@ -64,6 +69,11 @@ async function main() {
     if (!result.changed) continue;
 
     const target = result.ext === ext ? file : file.replace(/\.[^.]+$/, `.${result.ext}`);
+    // 확장자가 바뀌는데 이 사진을 쓰는 글·설정을 찾지 못하면, 경로가 깨질 수 있으므로 원본을 그대로 둡니다.
+    if (target !== file && (await replaceReferences(toPublic(file), '', { dryRun: true })) === 0) {
+      log(`건너뜀 (${toPublic(file)}): 이 사진을 쓰는 글을 찾지 못해 형식을 바꾸지 않습니다.`);
+      continue;
+    }
     // 확장자가 바뀌는데 같은 이름의 파일이 이미 있으면 덮어쓰지 않도록 이름을 바꿉니다.
     const finalPath = target !== file && existsSync(target) ? target.replace(/(\.[^.]+)$/, `-o$1`) : target;
     await writeFile(finalPath, result.buffer);

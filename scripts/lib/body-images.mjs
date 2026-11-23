@@ -83,7 +83,9 @@ let lastSize = 0;
 async function downloadOne(url, uploadDir, publicPrefix) {
   // 이미 우리 저장소에 있는 사진(CMS 업로드)은 그대로 사용
   lastSize = 0;
-  if (url.startsWith('/')) return url;
+  // '//host/…'(프로토콜 생략 주소)는 외부 이미지이므로 https로 받아 저장합니다.
+  if (url.startsWith('//')) url = `https:${url}`;
+  else if (url.startsWith('/')) return url;
 
   let buffer;
   let ext;
@@ -187,14 +189,16 @@ export function altText(title, n) {
 
 export function restoreImages(markdown, local, title = '') {
   const used = new Set();
+  // 설명(alt)의 번호는 실제로 보이는 사진 순서대로 1, 2, 3… (제외된 사진 때문에 번호가 건너뛰지 않게)
+  let shown = 0;
   let out = String(markdown).replace(PLACEHOLDER_RE, (_, n) => {
     const i = Number(n) - 1;
     const src = local[i];
     if (!src || used.has(i)) return '';
     used.add(i);
-    return `\n\n![${altText(title, i + 1)}](${src})\n\n`;
+    return `\n\n![${altText(title, ++shown)}](${src})\n\n`;
   });
-  const missing = local.map((src, i) => (src && !used.has(i) ? `![${altText(title, i + 1)}](${src})` : null)).filter(Boolean);
+  const missing = local.map((src, i) => (src && !used.has(i) ? `![${altText(title, ++shown)}](${src})` : null)).filter(Boolean);
   if (missing.length) out += `\n\n${missing.join('\n\n')}`;
   return out.replace(/\n{3,}/g, '\n\n').trim();
 }

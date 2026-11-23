@@ -51,8 +51,18 @@ export function fontStylesheets(heading: HeadingFont, body: BodyFont): string[] 
   const b: FontDef = BODY_FONT_DEFS[body];
   const urls: string[] = [];
   if (h.google === null || b.google === null) urls.push(PRETENDARD_CSS);
-  // 같은 서체(예: 고운돋움 제목+본문)는 한 번만 요청
-  const families = [...new Set([h.google, b.google].filter((f): f is string => !!f))];
+  // 같은 서체(예: 나눔명조 제목+본문)는 굵기를 합쳐 한 번만 요청
+  const byFamily = new Map<string, Set<string>>();
+  for (const spec of [h.google, b.google]) {
+    if (!spec) continue;
+    const [family, axis] = spec.split(':');
+    const weights = byFamily.get(family) ?? new Set<string>();
+    for (const w of (axis?.replace(/^wght@/, '') ?? '').split(';').filter(Boolean)) weights.add(w);
+    byFamily.set(family, weights);
+  }
+  const families = [...byFamily.entries()].map(([family, weights]) =>
+    weights.size ? `${family}:wght@${[...weights].sort((x, y) => Number(x) - Number(y)).join(';')}` : family,
+  );
   if (families.length) urls.push(`https://fonts.googleapis.com/css2?${families.map((f) => `family=${f}`).join('&')}&display=swap`);
   return urls;
 }

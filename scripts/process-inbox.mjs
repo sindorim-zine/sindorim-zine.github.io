@@ -100,6 +100,8 @@ function uniqueFilename(base) {
 
 async function markFailed(file, raw, reason) {
   const { data, body } = splitFrontmatter(raw);
+  // 같은 이유로 이미 표시돼 있으면 다시 쓰지 않습니다(매일 불필요한 커밋 방지).
+  if (typeof data.aiStatus === 'string' && data.aiStatus.includes(`실패: ${reason} —`)) return;
   const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const stamp = `${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 ${String(kst.getUTCHours()).padStart(2, '0')}:${String(kst.getUTCMinutes()).padStart(2, '0')}`;
   data.aiStatus = `⚠️ ${stamp} AI 정리 실패: ${reason} — 이 글을 그대로 다시 저장하면 재시도하고, 아니면 내일 아침 8시에 자동으로 다시 시도합니다.`;
@@ -179,7 +181,7 @@ async function main() {
     if (eventInfo.eventDate) log(`  행사 정보: ${eventInfo.eventDate}${eventInfo.eventEndDate ? ` ~ ${eventInfo.eventEndDate}` : ''} (${eventInfo.eventLabel})`);
     // ③ 사진 추가 칸의 사진: 첫 장은 대표 사진, 나머지는 본문 아래에 붙입니다.
     if (photos.length > 1) {
-      markdownBody += `\n\n${photos.slice(1).map((p, i) => `![${altText(title, i + 2)}](${p})`).join('\n\n')}`;
+      markdownBody += `\n\n${photos.slice(1).map((p, i) => `![${altText(title, bodyImages.filter(Boolean).length + i + 1)}](${p})`).join('\n\n')}`;
     }
 
     const existing = originalUrl ? await findPostByOriginalUrl(originalUrl) : null;

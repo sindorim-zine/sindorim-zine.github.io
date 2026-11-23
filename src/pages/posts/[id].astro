@@ -20,6 +20,7 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const { title, summary, category, pubDate, originalUrl, pinned } = post.data;
 const thumb = thumbnailOf(post);
+const thumbInBody = !!thumb && (post.body ?? '').includes(thumb);
 const event = eventOf(post);
 const summaryLines = splitSummary(summary);
 const sourceUrl = isHttpUrl(originalUrl) ? originalUrl : siteConfig.cafeUrl;
@@ -67,6 +68,8 @@ const jsonLd = [
       )}
     </header>
 
+    {/* 대표 사진이 본문에도 들어 있으면 위쪽에 한 번 더 보여 주지 않습니다(같은 사진 중복 방지). */}
+    {!thumbInBody && (
     <div class="container-prose mt-8">
       <div class="aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-line bg-subtle">
         {thumb ? (
@@ -76,6 +79,7 @@ const jsonLd = [
         )}
       </div>
     </div>
+    )}
 
     {summaryLines.length > 0 && (
       <aside class="container-prose mt-8" aria-labelledby="ai-summary-title">

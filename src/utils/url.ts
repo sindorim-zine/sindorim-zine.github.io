@@ -18,9 +18,23 @@ export function withBase(path: string | null | undefined = '/'): string {
   if (!value) return BASE ? `${BASE}/` : '/';
   if (isExternalUrl(value) || value.startsWith('#')) return value;
 
-  const normalized = value.startsWith('/') ? value : `/${value}`;
+  const normalized = withTrailingSlash(value.startsWith('/') ? value : `/${value}`);
   if (BASE && (normalized === BASE || normalized.startsWith(`${BASE}/`))) return normalized;
   return `${BASE}${normalized}` || '/';
+}
+
+/**
+ * 페이지 주소는 끝에 '/'를 붙입니다(예: /about → /about/). GitHub Pages가 /about을 /about/로
+ * 한 번 더 이동(301)시키는 낭비를 없앱니다. 파일(.xml, .jpg 등)·쿼리·앵커가 있는 주소는 그대로 둡니다.
+ */
+function withTrailingSlash(path: string): string {
+  const cut = path.search(/[?#]/);
+  const pathname = cut === -1 ? path : path.slice(0, cut);
+  const rest = cut === -1 ? '' : path.slice(cut);
+  if (pathname.endsWith('/')) return path;
+  const last = pathname.slice(pathname.lastIndexOf('/') + 1);
+  if (last.includes('.')) return path;
+  return `${pathname}/${rest}`;
 }
 
 /** 검색엔진·OpenGraph용 완전한 절대 주소 (https://...) */

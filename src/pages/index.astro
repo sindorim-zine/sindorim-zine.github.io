@@ -209,12 +209,14 @@ const feedUrl = withBase('/feed.json');
       });
       var allLoaded = items.length >= total;
       var loading = null;
+      var loadFailed = false;
 
       function loadAll() {
         if (allLoaded) return Promise.resolve();
         if (loading) return loading;
+        loadFailed = false;
         loading = fetch(feedUrl, { cache: 'no-cache' })
-          .then(function (r) { return r.json(); })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
           .then(function (data) {
             var byId = {};
             items.forEach(function (it) { byId[it.id] = it; });
@@ -228,7 +230,7 @@ const feedUrl = withBase('/feed.json');
             });
             allLoaded = true;
           })
-          .catch(function () { loading = null; });
+          .catch(function () { loading = null; loadFailed = true; });
         return loading;
       }
 
@@ -301,17 +303,22 @@ const feedUrl = withBase('/feed.json');
         feedEl.replaceChildren(frag);
         if (window.sindorimFillDday) window.sindorimFillDday(feedEl);
         // 아직 전부 받지 않았다면 남은 수는 전체 개수 기준으로 안내
-        var matchingTotal = allLoaded ? list.length : (state.category ? list.length : total);
-        var remaining = Math.max(0, matchingTotal - shown.length);
+        var waiting = !allLoaded && !loadFailed && !!loading;
+        // 카테고리를 고른 상태에서 아직 전체 목록을 받지 못했으면 남은 개수를 알 수 없으므로 버튼을 잠시 숨깁니다.
+        var matchingTotal = allLoaded ? list.length : (state.category ? -1 : total);
+        var remaining = matchingTotal < 0 ? 0 : Math.max(0, matchingTotal - shown.length);
         if (moreBtn) {
           moreBtn.hidden = remaining === 0;
           var count = moreBtn.querySelector('[data-more-count]');
           if (count) count.textContent = '(' + remaining + '개 남음)';
         }
         if (empty) {
-          var showEmpty = shown.length === 0 && total > 0;
-          empty.textContent = showEmpty ? '이 카테고리에는 아직 글이 없습니다.' : '';
-          empty.hidden = !showEmpty;
+          var message = '';
+          if (loadFailed) message = '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+          else if (shown.length === 0 && waiting) message = '글을 불러오는 중입니다…';
+          else if (shown.length === 0 && total > 0) message = '이 카테고리에는 아직 글이 없습니다.';
+          empty.textContent = message;
+          empty.hidden = !message;
         }
         if (select) select.value = state.sort;
         if (heading && headings[state.sort]) heading.textContent = headings[state.sort];
@@ -321,15 +328,17 @@ const feedUrl = withBase('/feed.json');
       function update(change) {
         Object.assign(state, change);
         if (allLoaded) return render();
+        var pending = loadAll();
         render();
-        loadAll().then(render);
+        pending.then(render);
       }
 
       if (moreBtn) {
         moreBtn.addEventListener('click', function () {
           moreBtn.disabled = true;
           loadAll().then(function () {
-            state.limit += pageSize;
+            // 전체 목록을 받았을 때만 늘립니다. 실패하면 안내 문구를 보여 주고 다시 누를 수 있게 둡니다.
+            if (allLoaded) state.limit += pageSize;
             render();
             moreBtn.disabled = false;
           });

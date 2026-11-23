@@ -39,6 +39,6 @@ originalUrl: "https://cafe.naver.com/wooseongapt/551315"
 
 이벤트 안내를 확인하신 후 댓글로 "숙지 완료! 💚"를 남겨주시는 회원분들을 대상으로 노모어피자 신도림점 반반피자(R) 및 오븐스파게티 추첨 이벤트도 함께 진행됩니다.
 
-![신도림 커뮤니티 11월 착한기여도 이벤트 및 경품 안내 사진 4](/images/uploads/cafe/00bed541e97b7775.jpg)
+![신도림 커뮤니티 11월 착한기여도 이벤트 및 경품 안내 사진 1](/images/uploads/cafe/00bed541e97b7775.jpg)
 
 자세한 내용은 [네이버 카페 원문](https://cafe.naver.com/wooseongapt/551315)에서 확인하실 수 있습니다.

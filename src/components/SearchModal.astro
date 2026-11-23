@@ -41,6 +41,11 @@ const pagefindBase = withBase('/pagefind/');
     if (loaded || !dialog) return;
     loaded = true;
     const base = dialog.dataset.pagefindBase || '/pagefind/';
+    const fallback = dialog.querySelector('[data-search-fallback]');
+    if (fallback) {
+      fallback.textContent = '';
+      fallback.setAttribute('hidden', '');
+    }
     try {
       await Promise.all([loadAsset('link', `${base}pagefind-ui.css`), loadAsset('script', `${base}pagefind-ui.js`)]);
       const PagefindUI = (window as any).PagefindUI;
@@ -61,8 +66,9 @@ const pagefindBase = withBase('/pagefind/');
         },
       });
     } catch {
+      // 일시적인 실패라면 다음에 검색창을 열 때 다시 시도합니다.
+      loaded = false;
       // 검색 파일을 불러오지 못했을 때만 안내 문구를 채웁니다(초기 HTML에는 문구를 두지 않음).
-      const fallback = dialog.querySelector('[data-search-fallback]');
       if (fallback) {
         fallback.textContent = '검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
         fallback.removeAttribute('hidden');
