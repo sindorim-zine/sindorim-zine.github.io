@@ -109,5 +109,6 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          STORAGE_WARN_MB: '1' # 알림 시험용 임시 기준 (시험 후 되돌림)
+          # 기본 기준 700MB. 바꾸려면 저장소 Settings → Variables에 STORAGE_WARN_MB(숫자, MB)를 등록하세요.
+          STORAGE_WARN_MB: ${{ vars.STORAGE_WARN_MB }}
         run: node scripts/check-storage.mjs
