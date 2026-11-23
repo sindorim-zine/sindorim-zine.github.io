@@ -2,7 +2,7 @@
   "design": {
     "themePreset": "blossom",
     "heroStyle": "magazine-card",
-    "headingFont": "serif",
+    "headingFont": "songmyung",
     "bodyFont": "pretendard",
     "defaultViewMode": "grid",
     "defaultSort": "newest"
