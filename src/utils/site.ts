@@ -33,6 +33,14 @@ function text(value: unknown, fallback = ''): string {
 
 type NavItem = { label: string; url: string };
 
+/** '<meta name="google-site-verification" content="abc" />' 또는 'abc' → 'abc' (안전한 문자만 허용) */
+function verificationCode(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const raw = value.trim();
+  const fromTag = /content\s*=\s*["']([^"']+)["']/i.exec(raw)?.[1] ?? raw;
+  return /^[A-Za-z0-9_\-:.=+/]{6,200}$/.test(fromTag.trim()) ? fromTag.trim() : '';
+}
+
 const raw = siteConfigJson as Record<string, any>;
 const rawDesign = (raw.design ?? {}) as Record<string, unknown>;
 const rawBanner = (raw.eventBanner ?? {}) as Record<string, unknown>;
@@ -44,6 +52,12 @@ export const siteConfig = {
   representativeName: text(raw.representativeName, '신도림 커뮤니티 운영진') || '신도림 커뮤니티 운영진',
   cafeUrl: isHttpUrl(raw.cafeUrl) ? (raw.cafeUrl as string) : '',
   indexNowKey: text(raw.indexNowKey),
+  // 검색엔진 소유 확인 코드: 운영자가 meta 태그 전체를 붙여 넣어도 content 값만 골라 씁니다.
+  verification: {
+    google: verificationCode((raw.searchVerification ?? {}).google),
+    naver: verificationCode((raw.searchVerification ?? {}).naver),
+    bing: verificationCode((raw.searchVerification ?? {}).bing),
+  },
   heroTitle: text(raw.heroTitle),
   heroSubtitle: text(raw.heroSubtitle),
   heroImage: text(raw.heroImage),

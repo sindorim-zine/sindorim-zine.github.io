@@ -408,6 +408,20 @@ content:
       - name: indexNowKey
         label: IndexNow 키 (GitHub Secrets에 등록했다면 비워 두세요)
         type: string
+      - name: searchVerification
+        label: 🔎 검색엔진 소유 확인 코드 (Google·네이버·Bing 사이트 등록용)
+        type: object
+        description: 각 검색엔진에서 'HTML 태그' 방식을 고르면 나오는 <meta ...> 한 줄을 통째로 붙여 넣어도 되고, content="..." 안의 값만 넣어도 됩니다.
+        fields:
+          - name: google
+            label: Google Search Console (google-site-verification)
+            type: string
+          - name: naver
+            label: 네이버 서치어드바이저 (naver-site-verification)
+            type: string
+          - name: bing
+            label: Bing 웹마스터 도구 (msvalidate.01)
+            type: string
       - name: categories
         label: 카테고리 목록 (메인 화면 탭 순서)
         type: string

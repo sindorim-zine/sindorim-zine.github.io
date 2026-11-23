@@ -58,6 +58,10 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content={themeColor} />
     <meta name="generator" content={Astro.generator} />
+    {/* 검색엔진 소유 확인 (CMS 기본 설정 → 검색엔진 소유 확인 코드) */}
+    {siteConfig.verification.google && <meta name="google-site-verification" content={siteConfig.verification.google} />}
+    {siteConfig.verification.naver && <meta name="naver-site-verification" content={siteConfig.verification.naver} />}
+    {siteConfig.verification.bing && <meta name="msvalidate.01" content={siteConfig.verification.bing} />}
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
     <link rel="alternate" type="text/plain" title="llms.txt" href={withBase('/llms.txt')} />
