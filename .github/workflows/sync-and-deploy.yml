@@ -48,7 +48,8 @@ jobs:
       - name: 카페 글 AI 정리 (받아쓰기 → 게시글)
         id: inbox
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # GEMINI_API_KEY 또는 GEMINIAPI_KEY 어느 이름으로 등록해도 동작합니다.
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GEMINIAPI_KEY }}
         run: node scripts/process-inbox.mjs
 
       - name: 정리된 글 커밋 & 푸시
