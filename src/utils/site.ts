@@ -33,10 +33,14 @@ function text(value: unknown, fallback = ''): string {
 
 type NavItem = { label: string; url: string };
 
+/** 'HTML 파일' 확인 방식의 파일 이름 (예: googledce5aa01442ce970.html, naver1a2b3c.html) */
+const VERIFY_FILE_RE = /\b((?:google|naver)[0-9a-f]{8,64}\.html)\b/i;
+
 /** '<meta name="google-site-verification" content="abc" />' 또는 'abc' → 'abc' (안전한 문자만 허용) */
 function verificationCode(value: unknown): string {
   if (typeof value !== 'string') return '';
   const raw = value.trim();
+  if (VERIFY_FILE_RE.test(raw) && !/content\s*=/i.test(raw)) return ''; // 파일 방식 값은 meta 태그로 쓰지 않음
   const fromTag = /content\s*=\s*["']([^"']+)["']/i.exec(raw)?.[1] ?? raw;
   return /^[A-Za-z0-9_\-:.=+/]{6,200}$/.test(fromTag.trim()) ? fromTag.trim() : '';
 }
@@ -58,6 +62,10 @@ export const siteConfig = {
     naver: verificationCode((raw.searchVerification ?? {}).naver),
     bing: verificationCode((raw.searchVerification ?? {}).bing),
   },
+  // 'HTML 파일' 방식으로 받은 값이면 그 이름의 확인 파일을 사이트 루트에 만들어 줍니다.
+  verificationFiles: Object.values((raw.searchVerification ?? {}) as Record<string, unknown>)
+    .map((v) => (typeof v === 'string' ? VERIFY_FILE_RE.exec(v)?.[1] : undefined))
+    .filter((v): v is string => !!v),
   heroTitle: text(raw.heroTitle),
   heroSubtitle: text(raw.heroSubtitle),
   heroImage: text(raw.heroImage),
