@@ -54,6 +54,7 @@ export function toPlainForAi(text) {
     .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
+    .replace(/[​‌‍﻿]/g, '') // 네이버 편집기가 넣는 보이지 않는 글자 제거
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -86,11 +87,15 @@ async function downloadOne(url, uploadDir, publicPrefix) {
     if (!ext) throw new Error(`지원하지 않는 형식 ${m[1]}`);
     buffer = Buffer.from(m[2], 'base64');
   } else if (/^https?:\/\//i.test(url)) {
-    const target = naverSized(url);
-    const res = await fetch(target, {
-      headers: { 'User-Agent': USER_AGENT, Referer: 'https://cafe.naver.com/', Accept: 'image/*' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const get = (target) =>
+      fetch(target, {
+        headers: { 'User-Agent': USER_AGENT, Referer: 'https://cafe.naver.com/', Accept: 'image/*' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+    const sized = naverSized(url);
+    let res = await get(sized);
+    // 일부 네이버 이미지 서버(링크 미리보기 썸네일 등)는 크기 지정을 받지 않으므로 원래 주소로 다시 받습니다.
+    if (!res.ok && sized !== url) res = await get(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const type = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
     ext = EXT[type];

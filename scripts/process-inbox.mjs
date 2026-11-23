@@ -151,8 +151,10 @@ async function main() {
       try {
         result = await writeWithGemini({ apiKey, categories, sourceText: scrubPii(plainText).slice(0, 12000), hintTitle, hintCategory });
       } catch (error) {
-        const message = (error?.message || String(error)).slice(0, 160);
-        log(`  AI 정리 실패: ${message}`);
+        const full = error?.message || String(error);
+        // 구글 오류는 JSON 문자열로 오므로 사람이 읽을 메시지만 꺼냅니다.
+        const message = (/"message"\s*:\s*"([^"]+)"/.exec(full)?.[1] || full).slice(0, 300);
+        log(`  AI 정리 실패: ${full.slice(0, 500)}`);
         if (isAuthError(error)) aiBlocked = true;
         await markFailed(file, raw, isAuthError(error) ? 'Gemini 키가 올바르지 않습니다 (GitHub Secrets의 GEMINI_API_KEY 확인)' : message);
         continue;

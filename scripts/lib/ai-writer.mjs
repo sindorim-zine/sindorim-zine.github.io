@@ -5,7 +5,7 @@
 
 import { createHash } from 'node:crypto';
 
-export const MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash').trim();
+export const MODEL = (process.env.GEMINI_MODEL || 'gemini-3.8-flash').trim();
 export const DEFAULT_CATEGORIES = ['공지사항', '모임·행사', '동네 소식', '생활 정보', '맛집·카페'];
 
 // ---------------------------------------------------------------------------
@@ -127,8 +127,8 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
     .filter((l) => l !== '')
     .join('\n');
 
-  const response = await ai.models.generateContent({
-    model: MODEL,
+  const request = (model) => ai.models.generateContent({
+    model,
     contents: [{ role: 'user', parts: [{ text: userText }] }],
     config: {
       systemInstruction: systemInstruction(categories),
@@ -148,12 +148,52 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
       },
     },
   });
+
+  let response;
+  try {
+    response = await request(activeModel);
+  } catch (error) {
+    // 구글이 모델을 종료하면 오류 메시지에 새 모델 이름을 안내합니다. 그 모델로 한 번 자동 전환해 다시 시도합니다.
+    const next = isModelError(error) ? await suggestModel(ai, error) : null;
+    if (!next || next === activeModel) throw error;
+    console.log(`[ai-writer] 모델 ${activeModel} 사용 불가 → ${next}(으)로 자동 전환`);
+    activeModel = next;
+    response = await request(activeModel);
+  }
   const raw = typeof response.text === 'string' ? response.text : '';
   const data = JSON.parse(raw);
   for (const key of ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody']) {
     if (typeof data[key] !== 'string' || !data[key].trim()) throw new Error(`AI 응답에 ${key}가 비어 있습니다`);
   }
   return data;
+}
+
+let activeModel = MODEL;
+
+export function isModelError(error) {
+  const message = error?.message || String(error);
+  const status = Number(error?.status ?? error?.code);
+  return status === 404 || /NOT_FOUND|no longer available|is not found|not supported for generateContent/i.test(message);
+}
+
+/** 오류 메시지가 안내하는 모델, 없으면 사용 가능한 최신 flash 모델을 고릅니다. */
+async function suggestModel(ai, error) {
+  const message = error?.message || String(error);
+  const hinted = [...message.matchAll(/models\/(gemini-[a-z0-9.-]+)/gi)].map((m) => m[1]).find((m) => m !== activeModel);
+  if (hinted) return hinted;
+  try {
+    const names = [];
+    const pager = await ai.models.list();
+    for await (const model of pager) {
+      const name = String(model.name || '').replace(/^models\//, '');
+      const actions = model.supportedActions || model.supportedGenerationMethods || [];
+      if (/^gemini-\d+(\.\d+)?-flash$/.test(name) && (!actions.length || actions.includes('generateContent'))) names.push(name);
+    }
+    const version = (n) => parseFloat(n.replace(/^gemini-/, ''));
+    return names.sort((a, b) => version(b) - version(a))[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export function isAuthError(error) {

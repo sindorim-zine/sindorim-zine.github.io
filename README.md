@@ -185,7 +185,7 @@ npm run dev
 - Tailwind CSS v4 + `@tailwindcss/vite` (구형 `@astrojs/tailwind` 미사용)
 - Pagefind 한국어 정적 검색, `@astrojs/sitemap`
 - Pages CMS (`.pages.yml`)
-- Node.js 24, `@google/genai` (`gemini-2.5-flash`), `yaml`, IndexNow
+- Node.js 24, `@google/genai` (`gemini-3.8-flash`, 모델 종료 시 자동 전환), `yaml`, IndexNow
 - GitHub Actions → GitHub Pages
 
 ### 사이트 주소 자동 감지
