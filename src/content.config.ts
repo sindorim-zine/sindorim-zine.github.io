@@ -10,6 +10,8 @@ const posts = defineCollection({
   schema: z.object({
     title: z.string(),
     pubDate: z.coerce.date(),
+    // 같은 날 올린 글의 순서를 정하는 실제 발행 시각 (카페 글 올리기가 자동 기록, CMS에는 숨김)
+    publishedAt: z.preprocess((v) => (v === '' || v == null ? undefined : v), z.coerce.date().optional()),
     category: z.string(),
     summary: z.string().default(''),
     pinned: z.boolean().default(false),

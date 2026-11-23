@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getPublishedPosts } from '../utils/site';
+import { compareNewest, getPublishedPosts } from '../utils/site';
 import { coreContextMarkdown, markdownResponse, postLinkLine } from '../utils/markdown';
 import { absoluteUrl } from '../utils/url';
 
@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ site }) => {
   const pinned = posts.filter((p) => p.data.pinned);
   const latest = posts
     .filter((p) => !p.data.pinned)
-    .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+    .sort(compareNewest)
     .slice(0, LATEST_LIMIT);
 
   const sections = [coreContextMarkdown(site, { full: false })];

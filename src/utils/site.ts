@@ -60,6 +60,7 @@ export const siteConfig = {
     heroStyle: pick<HeroStyle>(rawDesign.heroStyle, HERO_STYLES, 'magazine-card'),
     headingFont: pick<HeadingFont>(rawDesign.headingFont, HEADING_FONTS, 'serif'),
     defaultViewMode: pick<ViewMode>(rawDesign.defaultViewMode, VIEW_MODES, 'grid'),
+    defaultSort: pick<'newest' | 'oldest' | 'title'>(rawDesign.defaultSort, ['newest', 'oldest', 'title'], 'newest'),
   },
   eventBanner: {
     enabled: rawBanner.enabled === true,
@@ -93,13 +94,44 @@ export const about: AboutData = {
   locationInfo: text(rawAbout.locationInfo, '서울특별시 구로구 신도림동 일대'),
 };
 
+/** 정렬용 발행 시각(같은 날 글 구분). 없으면 0 */
+export function publishedTime(post: Post): number {
+  const t = post.data.publishedAt?.getTime();
+  return t && !Number.isNaN(t) ? t : 0;
+}
+
+/** 최신순 비교: 작성일 → 실제 발행 시각 → 파일 이름 순으로 내림차순 */
+export function compareNewest(a: Post, b: Post): number {
+  return (
+    b.data.pubDate.getTime() - a.data.pubDate.getTime() ||
+    publishedTime(b) - publishedTime(a) ||
+    b.id.localeCompare(a.id)
+  );
+}
+
 /** 공개 게시글: draft 제외, 고정글 우선 → 최신순 */
 export async function getPublishedPosts(): Promise<Post[]> {
   const posts = await getCollection('posts', ({ data }) => data.draft !== true);
   return posts.sort((a, b) => {
     if (a.data.pinned !== b.data.pinned) return a.data.pinned ? -1 : 1;
-    return b.data.pubDate.getTime() - a.data.pubDate.getTime();
+    return compareNewest(a, b);
   });
+}
+
+/** 방문자 정렬 옵션 (운영자가 CMS에서 기본값 선택) */
+export const SORT_OPTIONS = [
+  { value: 'newest', label: '최신순' },
+  { value: 'oldest', label: '오래된순' },
+  { value: 'title', label: '제목순' },
+] as const;
+export type SortMode = (typeof SORT_OPTIONS)[number]['value'];
+
+/** 서버에서 미리 정렬해 둡니다(자바스크립트가 꺼져 있어도 기본 정렬로 보임). */
+export function sortPosts(posts: Post[], mode: SortMode): Post[] {
+  const list = [...posts];
+  if (mode === 'oldest') return list.sort((a, b) => compareNewest(b, a));
+  if (mode === 'title') return list.sort((a, b) => a.data.title.localeCompare(b.data.title, 'ko') || compareNewest(a, b));
+  return list.sort(compareNewest);
 }
 
 /** 탭에 보여 줄 카테고리: 설정의 순서를 따르되 글이 있는 카테고리만, 설정에 없는 글 카테고리는 뒤에 덧붙입니다. */

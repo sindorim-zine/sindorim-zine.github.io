@@ -1,7 +1,7 @@
 ---
 import Illustration from './Illustration.astro';
 import Icon from './Icon.astro';
-import { formatDate, illustrationFor, thumbnailOf, type Post } from '../utils/site';
+import { formatDate, illustrationFor, publishedTime, thumbnailOf, type Post } from '../utils/site';
 import { postPath, withBase } from '../utils/url';
 
 interface Props {
@@ -12,7 +12,14 @@ const { post, eager = false } = Astro.props;
 const { title, summary, category, pubDate, pinned } = post.data;
 const thumb = thumbnailOf(post);
 ---
-<li class="feed-item" data-category={category}>
+<li
+  class="feed-item"
+  data-category={category}
+  data-date={pubDate.getTime()}
+  data-published={publishedTime(post)}
+  data-id={post.id}
+  data-title={title}
+>
   <a href={withBase(postPath(post.id))} class="feed-card card group">
     <div class="feed-media">
       {thumb ? (

@@ -66,11 +66,12 @@ export function normalizeUrl(url) {
 }
 
 /** YAML Frontmatter를 JSON.stringify로 안전하게 직렬화한 마크다운 */
-export function buildPostMarkdown({ title, pubDate, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
+export function buildPostMarkdown({ title, pubDate, publishedAt, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
   const lines = [
     '---',
     `title: ${JSON.stringify(title)}`,
     `pubDate: ${JSON.stringify(pubDate)}`,
+    ...(publishedAt ? [`publishedAt: ${JSON.stringify(publishedAt)}`] : []),
     `category: ${JSON.stringify(category)}`,
     `summary: ${JSON.stringify(summary)}`,
     `pinned: ${pinned ? 'true' : 'false'}`,

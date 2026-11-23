@@ -3,7 +3,8 @@
     "themePreset": "winter-navy",
     "heroStyle": "magazine-card",
     "headingFont": "serif",
-    "defaultViewMode": "grid"
+    "defaultViewMode": "grid",
+    "defaultSort": "newest"
   },
   "eventBanner": {
     "enabled": false,

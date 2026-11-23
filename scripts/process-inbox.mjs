@@ -81,7 +81,10 @@ async function findPostByOriginalUrl(url) {
   for (const file of await readdir(POSTS_DIR)) {
     if (!file.endsWith('.md')) continue;
     const { data } = splitFrontmatter(await readFile(path.join(POSTS_DIR, file), 'utf8'));
-    if (data.originalUrl && normalizeUrl(data.originalUrl) === target) return file;
+    if (data.originalUrl && normalizeUrl(data.originalUrl) === target) {
+      const at = data.publishedAt instanceof Date ? data.publishedAt.toISOString() : typeof data.publishedAt === 'string' ? data.publishedAt : '';
+      return { file, publishedAt: at };
+    }
   }
   return null;
 }
@@ -176,10 +179,12 @@ async function main() {
     }
 
     const existing = originalUrl ? await findPostByOriginalUrl(originalUrl) : null;
-    const filename = existing ?? uniqueFilename(`${pubDate}-${toSlug(result.urlSlug || '', originalUrl || title || file)}`);
+    const filename = existing?.file ?? uniqueFilename(`${pubDate}-${toSlug(result.urlSlug || '', originalUrl || title || file)}`);
     const markdown = buildPostMarkdown({
       title,
       pubDate,
+      // 같은 글을 다시 올려 교체할 때는 처음 발행 시각을 유지해 목록 순서가 바뀌지 않게 합니다.
+      publishedAt: existing?.publishedAt || new Date().toISOString(),
       category,
       summary: scrubPii(result.summary).replace(/\s+/g, ' ').trim(),
       pinned,

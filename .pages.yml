@@ -156,6 +156,10 @@ content:
         type: boolean
         default: false
         description: 켜 두면 사이트에 공개되지 않습니다.
+      - name: publishedAt
+        label: 발행 시각 (자동 기록, 같은 날 글의 순서용)
+        type: string
+        hidden: true
       - name: body
         label: 본문
         type: rich-text
@@ -292,6 +296,18 @@ content:
                   label: 포토 그리드 (인스타그램형)
                 - name: list
                   label: 에세이 리스트 (브런치형)
+          - name: defaultSort
+            label: 첫 화면 글 정렬 순서
+            type: select
+            default: newest
+            options:
+              values:
+                - name: newest
+                  label: 최신순 (기본)
+                - name: oldest
+                  label: 오래된순
+                - name: title
+                  label: 제목 가나다순
 
       - name: eventBanner
         label: 📣 특별 이벤트 상단 배너

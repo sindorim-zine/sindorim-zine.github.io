@@ -303,6 +303,10 @@ html[data-view="list"] .feed-body { flex: 1; padding: 0; justify-content: center
 html[data-view="list"] .feed-title { font-size: 1.15rem; }
 @media (min-width: 640px) { html[data-view="list"] .feed-title { font-size: 1.3rem; } }
 
+.sort-select { position: relative; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0 0.4rem 0 0.75rem; min-height: 2.35rem; border-radius: var(--radius-pill); background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-muted); }
+.sort-select:focus-within { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.sort-select select { appearance: none; -webkit-appearance: none; background: transparent; border: 0; padding: 0.4rem 1.4rem 0.4rem 0.1rem; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); cursor: pointer; outline: none; }
+.sort-select::after { content: ""; position: absolute; right: 0.75rem; top: 50%; width: 0.4rem; height: 0.4rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
 .view-toggle { display: inline-flex; padding: 0.2rem; border-radius: var(--radius-pill); background: var(--bg-subtle); border: 1px solid var(--border-color); }
 .view-toggle button { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem; border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
 .view-toggle button[aria-pressed="true"] { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 1px 3px rgb(var(--shadow-color) / 0.12); }
