@@ -1,0 +1,388 @@
+@import "tailwindcss";
+
+/* =========================================================
+   1. 시맨틱 디자인 토큰 (기본값 = sage)
+   <html data-theme="..." data-heading-font="..."> 속성만 바꾸면
+   사이트 전체 색상과 제목 서체가 즉시 바뀝니다.
+   ========================================================= */
+:root {
+  --bg-primary: #FAF8F5;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1EEE8;
+  --text-primary: #2B2A27;
+  --text-muted: #6B675F;
+  --accent-primary: #4A6B5D;
+  --accent-soft: #E3EBE5;
+  --accent-secondary: #8DA399;
+  --accent-contrast: #FFFFFF;
+  --border-color: #E7E2DA;
+  --shadow-color: 43 42 39;
+
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-serif: "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", serif;
+  --font-heading: var(--font-serif);
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+}
+
+/* 도림천 세이지 (기본) */
+[data-theme="sage"] {
+  --bg-primary: #FAF8F5;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1EEE8;
+  --text-primary: #2B2A27;
+  --text-muted: #6B675F;
+  --accent-primary: #4A6B5D;
+  --accent-soft: #E3EBE5;
+  --accent-secondary: #8DA399;
+  --accent-contrast: #FFFFFF;
+  --border-color: #E7E2DA;
+  --shadow-color: 43 42 39;
+}
+
+/* 봄날 벚꽃 웜톤 */
+[data-theme="blossom"] {
+  --bg-primary: #FDF9F9;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F8EEEF;
+  --text-primary: #3A2A2E;
+  --text-muted: #7A6468;
+  --accent-primary: #C85A70;
+  --accent-soft: #F7E1E6;
+  --accent-secondary: #E8A0AE;
+  --accent-contrast: #FFFFFF;
+  --border-color: #F0E1E3;
+  --shadow-color: 58 42 46;
+}
+
+/* 가을 브런치 테라코타 */
+[data-theme="terracotta"] {
+  --bg-primary: #FBF7F2;
+  --bg-surface: #FFFDFA;
+  --bg-subtle: #F3EBE1;
+  --text-primary: #33281F;
+  --text-muted: #75665A;
+  --accent-primary: #B85D3B;
+  --accent-soft: #F3E0D5;
+  --accent-secondary: #D9A35F;
+  --accent-contrast: #FFFFFF;
+  --border-color: #EADFD2;
+  --shadow-color: 51 40 31;
+}
+
+/* 연말 네이비 골드 */
+[data-theme="winter-navy"] {
+  --bg-primary: #F7F8FA;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #ECEFF4;
+  --text-primary: #1C2433;
+  --text-muted: #5A6578;
+  --accent-primary: #23395B;
+  --accent-soft: #E1E7F0;
+  --accent-secondary: #C9A24B;
+  --accent-contrast: #FFFFFF;
+  --border-color: #DDE2EA;
+  --shadow-color: 28 36 51;
+}
+
+/* 모던 미니멀 모노톤 */
+[data-theme="minimal-mono"] {
+  --bg-primary: #FAFAFA;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F1F2;
+  --text-primary: #18181B;
+  --text-muted: #66666E;
+  --accent-primary: #18181B;
+  --accent-soft: #EBEBED;
+  --accent-secondary: #A1A1AA;
+  --accent-contrast: #FFFFFF;
+  --border-color: #E4E4E7;
+  --shadow-color: 24 24 27;
+  --radius-card: 0.5rem;
+}
+
+/* 제목 서체 전환 */
+[data-heading-font="serif"] { --font-heading: var(--font-serif); }
+[data-heading-font="sans"] { --font-heading: var(--font-body); }
+
+/* Tailwind 유틸리티에서도 토큰을 쓸 수 있도록 연결 (예: bg-surface, text-muted, text-accent) */
+@theme inline {
+  --color-page: var(--bg-primary);
+  --color-surface: var(--bg-surface);
+  --color-subtle: var(--bg-subtle);
+  --color-ink: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent-primary);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-2: var(--accent-secondary);
+  --color-line: var(--border-color);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+}
+
+/* =========================================================
+   2. 기본 요소
+   ========================================================= */
+@layer base {
+  html {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent-soft); color: var(--text-primary); }
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  img { max-width: 100%; height: auto; }
+}
+
+/* =========================================================
+   3. 공통 컴포넌트
+   ========================================================= */
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) { .container-page { padding-inline: 1.5rem; } }
+
+  .container-prose {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 8px 24px -12px rgb(var(--shadow-color) / 0.12);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--accent-primary);
+    color: var(--accent-contrast);
+    box-shadow: 0 6px 16px -8px var(--accent-primary);
+  }
+  .btn-ghost {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-ghost:hover { background: var(--bg-subtle); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.65rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  [data-theme="minimal-mono"] .chip { color: var(--text-primary); }
+
+  .chip-pinned {
+    background: var(--accent-primary);
+    color: var(--accent-contrast);
+  }
+  [data-theme="winter-navy"] .chip-pinned { background: var(--accent-secondary); color: #1C2433; }
+  [data-theme="minimal-mono"] .chip-pinned { color: var(--accent-contrast); }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .eyebrow {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+  }
+  [data-theme="winter-navy"] .eyebrow { color: #9A7A2E; }
+
+  .illustration {
+    color: var(--accent-primary);
+    background: var(--accent-soft);
+  }
+}
+
+/* =========================================================
+   4. 피드: 하나의 마크업이 그리드(4:5 포토)·리스트(에세이)로 전환
+   <html data-view="grid|list">
+   ========================================================= */
+.feed { display: grid; gap: 1.25rem; }
+.feed-item[hidden] { display: none !important; }
+
+.feed-card { display: flex; flex-direction: column; height: 100%; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.feed-card:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgb(var(--shadow-color) / 0.05), 0 18px 36px -16px rgb(var(--shadow-color) / 0.25); }
+.feed-media { position: relative; overflow: hidden; background: var(--bg-subtle); }
+.feed-media > img, .feed-media > svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.feed-body { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem 1.1rem 1.2rem; }
+.feed-title { font-family: var(--font-heading); font-weight: 700; font-size: 1.08rem; line-height: 1.45; }
+.feed-summary { color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.feed-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+
+/* 그리드 (기본) */
+html:not([data-view="list"]) .feed { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+@media (min-width: 560px) { html:not([data-view="list"]) .feed { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 960px) { html:not([data-view="list"]) .feed { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+html:not([data-view="list"]) .feed-media { aspect-ratio: 4 / 5; }
+
+/* 리스트 (브런치 에세이) */
+html[data-view="list"] .feed { grid-template-columns: 1fr; gap: 0; }
+html[data-view="list"] .feed-card {
+  flex-direction: row-reverse;
+  align-items: stretch;
+  gap: 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 1.25rem 0;
+}
+html[data-view="list"] .feed-card:hover { transform: none; box-shadow: none; }
+html[data-view="list"] .feed-card:hover .feed-title { color: var(--accent-primary); }
+html[data-view="list"] .feed-media { flex: 0 0 6.5rem; aspect-ratio: 1 / 1; border-radius: calc(var(--radius-card) * 0.6); }
+@media (min-width: 640px) { html[data-view="list"] .feed-media { flex-basis: 9.5rem; aspect-ratio: 4 / 3; } }
+html[data-view="list"] .feed-body { flex: 1; padding: 0; justify-content: center; }
+html[data-view="list"] .feed-title { font-size: 1.15rem; }
+@media (min-width: 640px) { html[data-view="list"] .feed-title { font-size: 1.3rem; } }
+
+.view-toggle { display: inline-flex; padding: 0.2rem; border-radius: var(--radius-pill); background: var(--bg-subtle); border: 1px solid var(--border-color); }
+.view-toggle button { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem; border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+.view-toggle button[aria-pressed="true"] { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 1px 3px rgb(var(--shadow-color) / 0.12); }
+
+/* 카테고리 탭 */
+.tabs { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 auto; padding: 0.45rem 1rem; border-radius: var(--radius-pill); border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-muted); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease; }
+.tab:hover { color: var(--text-primary); border-color: var(--accent-secondary); }
+.tab[aria-selected="true"] { background: var(--accent-primary); border-color: var(--accent-primary); color: var(--accent-contrast); }
+
+/* =========================================================
+   5. 히어로 3종
+   ========================================================= */
+.hero-magazine { display: grid; overflow: hidden; }
+@media (min-width: 768px) { .hero-magazine { grid-template-columns: 1.1fr 1fr; } }
+.hero-magazine .hero-media { min-height: 14rem; background: var(--bg-subtle); }
+.hero-magazine .hero-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.hero-full { position: relative; overflow: hidden; border-radius: 0; min-height: 26rem; display: flex; align-items: flex-end; background: var(--accent-primary); }
+@media (min-width: 768px) { .hero-full { min-height: 32rem; } }
+.hero-full .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-full::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / 0.05) 0%, rgb(0 0 0 / 0.25) 45%, rgb(0 0 0 / 0.68) 100%); }
+.hero-full .hero-content { position: relative; z-index: 1; color: #fff; }
+.hero-full .hero-content h1 { color: #fff; text-shadow: 0 2px 18px rgb(0 0 0 / 0.25); }
+.hero-full .hero-content p { color: rgb(255 255 255 / 0.9); }
+
+.hero-typo h1 { font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1.25; }
+.hero-typo .hero-rule { width: 3rem; height: 2px; background: var(--accent-primary); }
+
+/* =========================================================
+   6. 이벤트 띠배너
+   ========================================================= */
+.event-banner { background: var(--accent-primary); color: var(--accent-contrast); }
+[data-theme="winter-navy"] .event-banner .event-badge { background: var(--accent-secondary); color: #1C2433; }
+.event-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1rem 0.55rem; border-radius: var(--radius-pill); background: rgb(255 255 255 / 0.2); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; }
+.event-link { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; white-space: nowrap; }
+
+/* =========================================================
+   7. 본문 타이포그래피 (게시글 상세·소개 페이지)
+   ========================================================= */
+.prose-body { font-size: 1.06rem; line-height: 1.9; color: var(--text-primary); }
+.prose-body > * + * { margin-top: 1.25em; }
+.prose-body h2 { font-size: 1.45rem; font-weight: 700; margin-top: 2.2em; }
+.prose-body h3 { font-size: 1.2rem; font-weight: 700; margin-top: 1.8em; }
+.prose-body a { color: var(--accent-primary); text-decoration: underline; text-underline-offset: 3px; }
+.prose-body strong { font-weight: 700; }
+.prose-body ul, .prose-body ol { padding-left: 1.4em; }
+.prose-body ul { list-style: disc; }
+.prose-body ol { list-style: decimal; }
+.prose-body li + li { margin-top: 0.4em; }
+.prose-body li::marker { color: var(--accent-primary); }
+.prose-body blockquote { border-left: 3px solid var(--accent-primary); background: var(--bg-subtle); padding: 0.9em 1.2em; border-radius: 0 0.75rem 0.75rem 0; color: var(--text-muted); }
+.prose-body img { border-radius: var(--radius-card); margin-inline: auto; }
+.prose-body hr { border: 0; border-top: 1px solid var(--border-color); margin-block: 2.5em; }
+.prose-body code { background: var(--bg-subtle); padding: 0.1em 0.4em; border-radius: 0.35em; font-size: 0.9em; }
+.prose-body pre { background: var(--bg-subtle); padding: 1em; border-radius: 0.75rem; overflow-x: auto; }
+.prose-body table { width: 100%; border-collapse: collapse; font-size: 0.95em; display: block; overflow-x: auto; }
+.prose-body th, .prose-body td { border: 1px solid var(--border-color); padding: 0.5em 0.75em; text-align: left; }
+.prose-body th { background: var(--bg-subtle); }
+
+/* FAQ 아코디언 */
+.faq-item summary { list-style: none; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item .faq-icon { transition: transform 0.2s ease; }
+.faq-item[open] .faq-icon { transform: rotate(45deg); }
+
+/* 연혁 타임라인 */
+.timeline { position: relative; padding-left: 1.75rem; }
+.timeline::before { content: ""; position: absolute; left: 0.45rem; top: 0.4rem; bottom: 0.4rem; width: 2px; background: var(--border-color); }
+.timeline-dot { position: absolute; left: -1.75rem; top: 0.35rem; width: 0.95rem; height: 0.95rem; border-radius: 999px; background: var(--bg-primary); border: 3px solid var(--accent-primary); }
+
+/* 검색 모달 (Pagefind UI 색상도 테마 토큰을 따름) */
+.search-dialog { width: min(42rem, calc(100vw - 2rem)); max-height: min(80vh, 44rem); margin: 8vh auto auto; padding: 0; border: 1px solid var(--border-color); border-radius: var(--radius-card); background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.35); }
+.search-dialog::backdrop { background: rgb(0 0 0 / 0.35); backdrop-filter: blur(3px); }
+.search-dialog {
+  --pagefind-ui-scale: 0.9;
+  --pagefind-ui-primary: var(--accent-primary);
+  --pagefind-ui-text: var(--text-primary);
+  --pagefind-ui-background: var(--bg-surface);
+  --pagefind-ui-border: var(--border-color);
+  --pagefind-ui-tag: var(--bg-subtle);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 12px;
+  --pagefind-ui-font: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

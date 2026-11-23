@@ -1,0 +1,88 @@
+---
+// Pagefind 한국어 전문 검색 모달. 검색 번들은 모달을 처음 열 때만 불러옵니다(초기 로딩 0KB).
+import Icon from './Icon.astro';
+import { withBase } from '../utils/url';
+
+const pagefindBase = withBase('/pagefind/');
+---
+<dialog class="search-dialog" id="site-search" aria-label="사이트 검색" data-pagefind-base={pagefindBase}>
+  <div class="flex items-center justify-between border-b border-line px-5 py-3">
+    <p class="flex items-center gap-2 text-sm font-bold"><Icon name="search" size={16} /> 사이트 검색</p>
+    <button type="button" data-search-close class="grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-subtle hover:text-ink" aria-label="검색 닫기">
+      <Icon name="x" size={18} />
+    </button>
+  </div>
+  <div class="max-h-[calc(min(80vh,44rem)-3.5rem)] overflow-y-auto p-5">
+    <div id="pagefind-search"></div>
+    <p data-search-fallback hidden class="text-sm text-muted">
+      검색 색인은 사이트를 빌드(npm run build)한 뒤에 생성됩니다. 개발 미리보기에서는 검색이 동작하지 않을 수 있습니다.
+    </p>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('site-search') as HTMLDialogElement | null;
+  let loaded = false;
+
+  function loadAsset(tag: 'script' | 'link', url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement(tag);
+      if (tag === 'script') {
+        (el as HTMLScriptElement).src = url;
+      } else {
+        (el as HTMLLinkElement).rel = 'stylesheet';
+        (el as HTMLLinkElement).href = url;
+      }
+      el.addEventListener('load', () => resolve());
+      el.addEventListener('error', () => reject(new Error(url)));
+      document.head.appendChild(el);
+    });
+  }
+
+  async function ensurePagefind() {
+    if (loaded || !dialog) return;
+    loaded = true;
+    const base = dialog.dataset.pagefindBase || '/pagefind/';
+    try {
+      await Promise.all([loadAsset('link', `${base}pagefind-ui.css`), loadAsset('script', `${base}pagefind-ui.js`)]);
+      const PagefindUI = (window as any).PagefindUI;
+      new PagefindUI({
+        element: '#pagefind-search',
+        bundlePath: base,
+        showSubResults: true,
+        showImages: false,
+        resetStyles: false,
+        autofocus: true,
+        translations: {
+          placeholder: '모임, 행사, 동네 소식을 검색해 보세요',
+          zero_results: '[SEARCH_TERM]에 대한 검색 결과가 없습니다',
+          many_results: '[SEARCH_TERM] 검색 결과 [COUNT]건',
+          one_result: '[SEARCH_TERM] 검색 결과 1건',
+          load_more: '결과 더 보기',
+          clear_search: '지우기',
+        },
+      });
+    } catch {
+      dialog.querySelector('[data-search-fallback]')?.removeAttribute('hidden');
+    }
+  }
+
+  document.querySelectorAll('[data-search-open]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      dialog?.showModal();
+      ensurePagefind();
+      setTimeout(() => (dialog?.querySelector('input') as HTMLInputElement | null)?.focus(), 50);
+    }),
+  );
+  dialog?.querySelector('[data-search-close]')?.addEventListener('click', () => dialog.close());
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement))) {
+      e.preventDefault();
+      dialog?.showModal();
+      ensurePagefind();
+    }
+  });
+</script>

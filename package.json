@@ -1,0 +1,28 @@
+{
+  "name": "sindorim-community-web",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "신도림 커뮤니티 공식 웹 아카이브 (Astro + GitHub Pages)",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "sync:rss": "node scripts/sync-rss.mjs",
+    "indexnow": "node scripts/indexnow-ping.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.6",
+    "@google/genai": "^3.6.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "^7.4.13",
+    "pagefind": "^1.6.0",
+    "rss-parser": "^3.13.0",
+    "tailwindcss": "^4.3.5"
+  }
+}

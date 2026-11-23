@@ -1,0 +1,124 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import PostCard from '../components/PostCard.astro';
+import Icon from '../components/Icon.astro';
+import Illustration from '../components/Illustration.astro';
+import { collectCategories, formatDate, getPublishedPosts, illustrationFor, siteConfig, thumbnailOf } from '../utils/site';
+import { organizationSchema, websiteSchema } from '../utils/schema';
+import { postPath, withBase } from '../utils/url';
+
+const posts = await getPublishedPosts();
+const pinned = posts.filter((p) => p.data.pinned);
+const feed = posts.filter((p) => !p.data.pinned);
+const categories = collectCategories(feed);
+const { defaultViewMode } = siteConfig.design;
+const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
+---
+<BaseLayout jsonLd={[organizationSchema(Astro.site), websiteSchema(Astro.site)]}>
+  <Hero />
+
+  {pinned.length > 0 && (
+    <section class="container-page mt-12" aria-labelledby="pinned-title">
+      <h2 id="pinned-title" class="section-title mb-4"><span aria-hidden="true">📌</span> 중요 안내</h2>
+      <ul class="grid gap-4 md:grid-cols-2">
+        {pinned.map((post) => {
+          const thumb = thumbnailOf(post);
+          return (
+            <li>
+              <a href={withBase(postPath(post.id))} class="card group flex items-stretch gap-4 overflow-hidden p-3 transition hover:-translate-y-0.5">
+                <div class="aspect-square w-24 shrink-0 overflow-hidden rounded-[calc(var(--radius-card)*0.7)] sm:w-28">
+                  {thumb ? (
+                    <img src={withBase(thumb)} alt="" width="112" height="112" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                  ) : (
+                    <Illustration variant={illustrationFor(post.data.category)} class="h-full w-full" />
+                  )}
+                </div>
+                <div class="flex min-w-0 flex-col justify-center gap-1.5 py-1 pr-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>
+                    <span class="chip">{post.data.category}</span>
+                  </div>
+                  <h3 class="font-heading text-[1.05rem] font-bold leading-snug group-hover:text-accent">{post.data.title}</h3>
+                  <time class="text-xs text-muted" datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+
+  <section class="container-page mt-14" aria-labelledby="feed-title">
+    <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="eyebrow mb-1">Latest Stories</p>
+        <h2 id="feed-title" class="section-title">최신 소식</h2>
+      </div>
+      <div class="view-toggle" role="group" aria-label="보기 방식">
+        <button type="button" data-view-btn="grid" aria-pressed={defaultViewMode === 'grid' ? 'true' : 'false'}>
+          <Icon name="grid" size={15} /> 그리드
+        </button>
+        <button type="button" data-view-btn="list" aria-pressed={defaultViewMode === 'list' ? 'true' : 'false'}>
+          <Icon name="list" size={15} /> 리스트
+        </button>
+      </div>
+    </div>
+
+    {categories.length > 0 && (
+      <div class="tabs mb-6" role="tablist" aria-label="카테고리">
+        <button type="button" class="tab" role="tab" aria-selected="true" data-category-tab="">전체</button>
+        {categories.map((category) => (
+          <button type="button" class="tab" role="tab" aria-selected="false" data-category-tab={category}>{category}</button>
+        ))}
+      </div>
+    )}
+
+    {feed.length > 0 ? (
+      <ul class="feed" id="feed">
+        {feed.map((post, index) => <PostCard post={post} eager={index < 3} />)}
+      </ul>
+    ) : (
+      <p class="card p-8 text-center text-muted">아직 게시글이 없습니다. Pages CMS에서 첫 글을 작성해 보세요.</p>
+    )}
+    <p id="feed-empty" class="card hidden p-8 text-center text-muted">이 카테고리에는 아직 글이 없습니다.</p>
+  </section>
+
+  <script is:inline define:vars={{ viewStorageKey }}>
+    (function () {
+      var root = document.documentElement;
+      var buttons = document.querySelectorAll('[data-view-btn]');
+      function sync() {
+        var mode = root.getAttribute('data-view');
+        buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-view-btn') === mode)); });
+      }
+      buttons.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var mode = b.getAttribute('data-view-btn');
+          root.setAttribute('data-view', mode);
+          try { localStorage.setItem(viewStorageKey, mode); } catch (e) {}
+          sync();
+        });
+      });
+      sync();
+
+      var tabs = document.querySelectorAll('[data-category-tab]');
+      var items = document.querySelectorAll('#feed .feed-item');
+      var empty = document.getElementById('feed-empty');
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var selected = tab.getAttribute('data-category-tab');
+          var visible = 0;
+          tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t === tab)); });
+          items.forEach(function (item) {
+            var show = !selected || item.getAttribute('data-category') === selected;
+            item.hidden = !show;
+            if (show) visible++;
+          });
+          if (empty) empty.classList.toggle('hidden', visible > 0 || items.length === 0);
+        });
+      });
+    })();
+  </script>
+</BaseLayout>

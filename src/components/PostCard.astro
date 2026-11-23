@@ -1,0 +1,44 @@
+---
+import Illustration from './Illustration.astro';
+import Icon from './Icon.astro';
+import { formatDate, illustrationFor, thumbnailOf, type Post } from '../utils/site';
+import { postPath, withBase } from '../utils/url';
+
+interface Props {
+  post: Post;
+  eager?: boolean;
+}
+const { post, eager = false } = Astro.props;
+const { title, summary, category, pubDate, pinned } = post.data;
+const thumb = thumbnailOf(post);
+---
+<li class="feed-item" data-category={category}>
+  <a href={withBase(postPath(post.id))} class="feed-card card group">
+    <div class="feed-media">
+      {thumb ? (
+        <img
+          src={withBase(thumb)}
+          alt=""
+          width="400"
+          height="500"
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      ) : (
+        <Illustration variant={illustrationFor(category)} label={`${category} 기본 일러스트`} />
+      )}
+    </div>
+    <div class="feed-body">
+      <div class="flex flex-wrap items-center gap-1.5">
+        {pinned && <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>}
+        <span class="chip">{category}</span>
+      </div>
+      <h3 class="feed-title">{title}</h3>
+      {summary && <p class="feed-summary">{summary}</p>}
+      <p class="feed-meta">
+        <Icon name="calendar" size={13} />
+        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+      </p>
+    </div>
+  </a>
+</li>

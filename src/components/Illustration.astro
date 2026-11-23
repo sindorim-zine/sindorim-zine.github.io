@@ -1,0 +1,80 @@
+---
+// 카테고리별 기본 감성 일러스트. 썸네일이 없을 때 자동으로 쓰입니다.
+// currentColor(테마 포인트 색)와 테마 변수만 사용하므로 계절 테마를 바꾸면 그림 색도 함께 바뀝니다.
+import type { IllustrationVariant } from '../utils/site';
+
+interface Props {
+  variant: IllustrationVariant;
+  class?: string;
+  label?: string;
+}
+const { variant, class: className = '', label } = Astro.props;
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 400 500"
+  preserveAspectRatio="xMidYMid slice"
+  class:list={['illustration', className]}
+  role="img"
+  aria-label={label ?? '기본 일러스트'}
+>
+  <rect width="400" height="500" fill="var(--accent-soft)" />
+  <circle cx="320" cy="96" r="44" fill="var(--bg-surface)" opacity="0.75" />
+  <path d="M0 380 C 80 350, 140 400, 220 370 S 340 340, 400 360 L400 500 L0 500 Z" fill="var(--bg-surface)" opacity="0.55" />
+
+  {variant === 'notice' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M110 250 L110 300 Q110 312 122 312 L150 312" />
+      <path d="M110 230 L170 230 L270 175 L270 365 L170 310 L110 310 Z" fill="var(--bg-surface)" />
+      <path d="M170 230 L170 310" />
+      <path d="M300 230 Q322 270 300 310" />
+      <path d="M318 205 Q356 270 318 335" opacity="0.6" />
+      <path d="M180 312 L196 372 Q199 384 212 384 L226 384" />
+    </g>
+  )}
+
+  {variant === 'meetup' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="140" cy="215" r="34" fill="var(--bg-surface)" />
+      <circle cx="260" cy="215" r="34" fill="var(--bg-surface)" />
+      <path d="M80 360 Q80 280 140 280 Q200 280 200 360" fill="var(--bg-surface)" />
+      <path d="M200 360 Q200 280 260 280 Q320 280 320 360" fill="var(--bg-surface)" />
+      <path d="M60 360 L340 360" />
+      <path d="M190 150 Q200 128 210 150 Q220 128 230 150 Q232 172 210 186 Q188 172 190 150 Z" fill="currentColor" opacity="0.85" stroke="none" />
+    </g>
+  )}
+
+  {variant === 'local' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M40 330 Q120 300 200 330 T 360 330" opacity="0.5" />
+      <path d="M40 365 Q120 335 200 365 T 360 365" />
+      <path d="M90 300 Q200 200 310 300" />
+      <path d="M120 276 L120 330 M160 246 L160 330 M200 236 L200 330 M240 246 L240 330 M280 276 L280 330" opacity="0.7" />
+      <path d="M70 300 L70 240 M70 240 Q50 220 70 195 Q90 220 70 240 Z" fill="var(--bg-surface)" />
+      <path d="M335 300 L335 230 M335 230 Q310 205 335 175 Q360 205 335 230 Z" fill="var(--bg-surface)" />
+    </g>
+  )}
+
+  {variant === 'life' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M110 240 L200 165 L290 240" />
+      <path d="M128 226 L128 350 L272 350 L272 226" fill="var(--bg-surface)" />
+      <path d="M180 350 L180 290 L220 290 L220 350" />
+      <rect x="146" y="246" width="26" height="26" rx="4" />
+      <rect x="228" y="246" width="26" height="26" rx="4" />
+      <path d="M300 350 Q300 300 330 280 Q336 320 300 350 Z" fill="currentColor" opacity="0.8" stroke="none" />
+      <path d="M90 350 L320 350" />
+    </g>
+  )}
+
+  {variant === 'food' && (
+    <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M120 250 L280 250 L268 340 Q264 362 242 362 L158 362 Q136 362 132 340 Z" fill="var(--bg-surface)" />
+      <path d="M280 268 Q318 268 318 296 Q318 324 274 324" />
+      <path d="M95 380 L305 380" />
+      <path d="M165 225 Q150 205 165 185 Q180 165 165 145" opacity="0.6" />
+      <path d="M200 225 Q185 205 200 185 Q215 165 200 145" opacity="0.6" />
+      <path d="M235 225 Q220 205 235 185 Q250 165 235 145" opacity="0.6" />
+    </g>
+  )}
+</svg>

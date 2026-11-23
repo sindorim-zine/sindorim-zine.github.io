@@ -1,0 +1,114 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import Illustration from '../../components/Illustration.astro';
+import { formatDate, getPublishedPosts, illustrationFor, siteConfig, splitSummary, thumbnailOf, type Post } from '../../utils/site';
+import { blogPostingSchema, breadcrumbSchema } from '../../utils/schema';
+import { isHttpUrl, postMarkdownPath, postPath, withBase } from '../../utils/url';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, summary, category, pubDate, originalUrl, pinned } = post.data;
+const thumb = thumbnailOf(post);
+const summaryLines = splitSummary(summary);
+const sourceUrl = isHttpUrl(originalUrl) ? originalUrl : siteConfig.cafeUrl;
+const jsonLd = [
+  blogPostingSchema(post, Astro.site),
+  breadcrumbSchema(
+    [
+      { name: '홈', path: '/' },
+      { name: category, path: '/' },
+      { name: title, path: postPath(post.id) },
+    ],
+    Astro.site,
+  ),
+];
+---
+<BaseLayout
+  title={title}
+  description={summary || siteConfig.siteDescription}
+  image={thumb}
+  type="article"
+  markdownPath={postMarkdownPath(post.id)}
+  publishedTime={pubDate.toISOString()}
+  jsonLd={jsonLd}
+>
+  <article class="pb-4 pt-10 md:pt-16" data-pagefind-body>
+    <header class="container-prose">
+      <nav class="mb-6 text-sm text-muted" aria-label="현재 위치" data-pagefind-ignore>
+        <a href={withBase('/')} class="hover:text-ink">홈</a>
+        <span class="mx-1.5" aria-hidden="true">/</span>
+        <span>{category}</span>
+      </nav>
+      <div class="flex flex-wrap items-center gap-1.5">
+        {pinned && <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>}
+        <span class="chip" data-pagefind-filter="카테고리">{category}</span>
+      </div>
+      <h1 class="mt-4 text-[1.85rem] font-bold leading-snug sm:text-4xl">{title}</h1>
+      <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+        <span class="inline-flex items-center gap-1"><Icon name="calendar" size={14} /><time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></span>
+        <span aria-hidden="true">·</span>
+        <span>{siteConfig.representativeName}</span>
+      </p>
+    </header>
+
+    <div class="container-prose mt-8">
+      <div class="aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-line">
+        {thumb ? (
+          <img src={withBase(thumb)} alt="" width="1200" height="750" class="h-full w-full object-cover" fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
+        ) : (
+          <Illustration variant={illustrationFor(category)} class="h-full w-full" label={`${category} 기본 일러스트`} />
+        )}
+      </div>
+    </div>
+
+    {summaryLines.length > 0 && (
+      <aside class="container-prose mt-8" aria-labelledby="ai-summary-title">
+        <div class="rounded-[var(--radius-card)] border border-line bg-accent-soft/60 p-5 sm:p-6">
+          <p id="ai-summary-title" class="mb-3 flex items-center gap-1.5 text-sm font-bold text-accent">
+            <Icon name="sparkle" size={16} /> AI 핵심 3줄 요약
+          </p>
+          <ul class="space-y-2">
+            {summaryLines.map((line) => (
+              <li class="flex gap-2 leading-relaxed">
+                <span class="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    )}
+
+    <div class="container-prose prose-body mt-10">
+      <Content />
+    </div>
+  </article>
+
+  <section class="container-prose mt-12" aria-label="네이버 카페에서 이어가기">
+    <div class="card flex flex-col items-center gap-4 p-8 text-center">
+      <span class="grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent"><Icon name="chat" size={22} /></span>
+      <p class="font-heading text-xl font-bold">이 소식에 대한 이야기는 카페에서 나눠요</p>
+      <p class="max-w-md text-sm text-muted">댓글, 참여 신청, 자세한 일정은 네이버 카페 원문에서 확인하고 함께할 수 있습니다.</p>
+      {sourceUrl ? (
+        <a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          네이버 카페 원문에서 댓글로 함께하기 <Icon name="external" size={15} />
+        </a>
+      ) : (
+        <a href={withBase('/about')} class="btn btn-ghost">커뮤니티 소개 보기</a>
+      )}
+    </div>
+    <p class="mt-8 text-center">
+      <a href={withBase('/')} class="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">← 최신 소식 목록으로</a>
+    </p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,85 @@
+---
+import Icon from './Icon.astro';
+import Illustration from './Illustration.astro';
+import { siteConfig } from '../utils/site';
+import { withBase } from '../utils/url';
+
+const { heroStyle } = siteConfig.design;
+const title = siteConfig.heroTitle || siteConfig.siteTitle;
+const titleLines = title.split(/\n/);
+const subtitle = siteConfig.heroSubtitle;
+const image = siteConfig.heroImage ? withBase(siteConfig.heroImage) : '';
+const cafeUrl = siteConfig.cafeUrl;
+---
+{heroStyle === 'magazine-card' && (
+  <section class="container-page pt-6 md:pt-10" aria-labelledby="hero-title">
+    <div class="card hero-magazine">
+      <div class="flex flex-col justify-center gap-5 p-7 sm:p-10 md:p-12">
+        <p class="eyebrow">Sindorim Community</p>
+        <h1 id="hero-title" class="text-3xl font-bold sm:text-4xl md:text-[2.6rem]">
+          {titleLines.map((line, i) => <>{i > 0 && <br />}{line}</>)}
+        </h1>
+        {subtitle && <p class="max-w-md text-[1.02rem] leading-relaxed text-muted">{subtitle}</p>}
+        <div class="flex flex-wrap gap-2.5 pt-1">
+          <a href={withBase('/about')} class="btn btn-ghost">커뮤니티 소개</a>
+          {cafeUrl && (
+            <a href={cafeUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+              카페 가입하기 <Icon name="arrow-right" size={16} />
+            </a>
+          )}
+        </div>
+      </div>
+      <div class="hero-media order-first md:order-none">
+        {image ? (
+          <img src={image} alt="" width="800" height="640" fetchpriority="high" decoding="async" />
+        ) : (
+          <Illustration variant="local" class="h-full w-full" label="도림천 일러스트" />
+        )}
+      </div>
+    </div>
+  </section>
+)}
+
+{heroStyle === 'full-visual' && (
+  <section class="hero-full" aria-labelledby="hero-title">
+    {image ? (
+      <img class="hero-bg" src={image} alt="" width="1600" height="900" fetchpriority="high" decoding="async" />
+    ) : (
+      <Illustration variant="local" class="hero-bg" label="도림천 일러스트" />
+    )}
+    <div class="hero-content container-page flex flex-col gap-5 pb-12 pt-24 md:pb-16">
+      <p class="text-sm font-bold uppercase tracking-[0.14em] text-white/85">Sindorim Community</p>
+      <h1 id="hero-title" class="max-w-3xl text-4xl font-bold sm:text-5xl md:text-6xl">
+        {titleLines.map((line, i) => <>{i > 0 && <br />}{line}</>)}
+      </h1>
+      {subtitle && <p class="max-w-xl text-lg leading-relaxed">{subtitle}</p>}
+      <div class="flex flex-wrap gap-2.5">
+        {cafeUrl && (
+          <a href={cafeUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+            카페 가입하기 <Icon name="arrow-right" size={16} />
+          </a>
+        )}
+        <a href={withBase('/about')} class="btn border border-white/50 bg-white/10 text-white backdrop-blur hover:bg-white/20">커뮤니티 소개</a>
+      </div>
+    </div>
+  </section>
+)}
+
+{heroStyle === 'minimal-typo' && (
+  <section class="container-prose hero-typo flex flex-col gap-6 pb-6 pt-16 md:pt-24" aria-labelledby="hero-title">
+    <p class="eyebrow">Sindorim Community</p>
+    <h1 id="hero-title" class="font-bold">
+      {titleLines.map((line, i) => <>{i > 0 && <br />}{line}</>)}
+    </h1>
+    <span class="hero-rule" aria-hidden="true"></span>
+    {subtitle && <p class="text-lg leading-loose text-muted">{subtitle}</p>}
+    <div class="flex flex-wrap gap-4 text-sm font-semibold">
+      <a href={withBase('/about')} class="inline-flex items-center gap-1 text-accent underline underline-offset-4">커뮤니티 소개 읽기 <Icon name="arrow-right" size={15} /></a>
+      {cafeUrl && (
+        <a href={cafeUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-muted underline underline-offset-4 hover:text-ink">
+          네이버 카페 가입 <Icon name="external" size={14} />
+        </a>
+      )}
+    </div>
+  </section>
+)}

@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { about, siteConfig } from '../utils/site';
+import { aboutPageSchema, breadcrumbSchema, faqPageSchema } from '../utils/schema';
+import { withBase } from '../utils/url';
+
+const faqSchema = faqPageSchema(Astro.site);
+const jsonLd = [
+  aboutPageSchema(Astro.site),
+  ...(faqSchema ? [faqSchema] : []),
+  breadcrumbSchema([{ name: '홈', path: '/' }, { name: '커뮤니티 소개', path: '/about/' }], Astro.site),
+];
+const valueIcons = ['chat', 'users', 'heart', 'book'] as const;
+const paragraphs = about.introBody.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+---
+<BaseLayout
+  title={about.introTitle || '커뮤니티 소개'}
+  description={about.introLead || siteConfig.siteDescription}
+  markdownPath="/about.md"
+  jsonLd={jsonLd}
+>
+  <article data-pagefind-body>
+    <header class="container-prose pt-14 md:pt-20">
+      <p class="eyebrow mb-3">About Us</p>
+      <h1 class="text-3xl font-bold sm:text-4xl">{about.introTitle}</h1>
+      {about.introLead && <p class="mt-5 text-lg leading-relaxed text-muted">{about.introLead}</p>}
+      <p class="mt-5 inline-flex items-center gap-1.5 text-sm text-muted">
+        <Icon name="map-pin" size={15} /> {about.locationInfo}
+      </p>
+    </header>
+
+    {paragraphs.length > 0 && (
+      <section class="container-prose prose-body mt-10" aria-label="소개 본문">
+        {paragraphs.map((p) => <p>{p}</p>)}
+      </section>
+    )}
+
+    {about.coreValues.length > 0 && (
+      <section class="container-page mt-16" aria-labelledby="values-title">
+        <h2 id="values-title" class="section-title mb-6">우리가 하는 일</h2>
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {about.coreValues.map((value, i) => (
+            <li class="card flex flex-col gap-3 p-6">
+              <span class="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent">
+                <Icon name={valueIcons[i % valueIcons.length]} size={20} />
+              </span>
+              <h3 class="text-lg font-bold">{value.title}</h3>
+              <p class="text-sm leading-relaxed text-muted">{value.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {about.milestones.length > 0 && (
+      <section class="container-prose mt-16" aria-labelledby="history-title">
+        <h2 id="history-title" class="section-title mb-6">걸어온 길</h2>
+        <ol class="timeline space-y-7">
+          {about.milestones.map((m) => (
+            <li class="relative">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <p class="text-sm font-bold text-accent">{m.period}</p>
+              <p class="mt-1 leading-relaxed">{m.event}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    {about.faqs.length > 0 && (
+      <section class="container-prose mt-16" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="section-title mb-6">자주 묻는 질문</h2>
+        <div class="space-y-3">
+          {about.faqs.map((faq, i) => (
+            <details class="faq-item card overflow-hidden" open={i === 0}>
+              <summary class="flex items-center justify-between gap-4 px-5 py-4 font-semibold">
+                <span><span class="mr-1.5 text-accent">Q.</span>{faq.question}</span>
+                <span class="faq-icon grid h-7 w-7 shrink-0 place-items-center rounded-full bg-subtle text-muted"><Icon name="plus" size={16} /></span>
+              </summary>
+              <p class="border-t border-line px-5 py-4 leading-relaxed text-muted">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+    )}
+  </article>
+
+  <section class="container-prose mt-16">
+    <div class="card flex flex-col items-center gap-4 bg-accent-soft p-8 text-center sm:p-10">
+      <p class="font-heading text-2xl font-bold">신도림 이웃이 되어 주세요</p>
+      <p class="max-w-md text-muted">회원 가입, 댓글, 모임 신청은 네이버 카페에서 함께할 수 있습니다.</p>
+      {siteConfig.cafeUrl ? (
+        <a href={siteConfig.cafeUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          네이버 카페 가입하기 <Icon name="external" size={15} />
+        </a>
+      ) : (
+        <a href={withBase('/')} class="btn btn-ghost">최신 소식 보기</a>
+      )}
+    </div>
+  </section>
+</BaseLayout>

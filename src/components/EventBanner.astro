@@ -1,0 +1,35 @@
+---
+import Icon from './Icon.astro';
+import { siteConfig } from '../utils/site';
+import { isExternalUrl, withBase } from '../utils/url';
+
+const banner = siteConfig.eventBanner;
+const show = banner.enabled && banner.text.trim() !== '';
+const hasLink = banner.linkUrl.trim() !== '';
+const external = isExternalUrl(banner.linkUrl);
+const href = hasLink ? withBase(banner.linkUrl) : undefined;
+---
+{show && (
+  <div class="event-banner" role="region" aria-label="특별 공지">
+    <div class="container-page flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2.5 text-center text-sm">
+      {banner.badge && (
+        <span class="event-badge">
+          <Icon name="sparkle" size={12} />
+          {banner.badge}
+        </span>
+      )}
+      <span class="font-medium">{banner.text}</span>
+      {hasLink && (
+        <a
+          class="event-link inline-flex items-center gap-1"
+          href={href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
+        >
+          {banner.linkText || '자세히 보기'}
+          <Icon name={external ? 'external' : 'arrow-right'} size={14} />
+        </a>
+      )}
+    </div>
+  </div>
+)}

@@ -1,0 +1,96 @@
+name: Sync RSS & Deploy
+
+on:
+  # 매일 한국시간 오전 8시 (UTC 23:00) 네이버 카페 RSS 자동 수집
+  schedule:
+    - cron: '0 23 * * *'
+  # GitHub Actions 화면에서 수동 실행
+  workflow_dispatch:
+  # Pages CMS에서 글·디자인·이벤트 배너를 저장하면 바로 빌드·배포 (RSS 수집은 건너뜀)
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sync-and-deploy
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+      INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY || vars.INDEXNOW_KEY }}
+    steps:
+      - name: 저장소 가져오기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Node.js 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci --no-audit --no-fund
+
+      # ── 예약 실행·수동 실행일 때만: RSS 수집 → 자동 커밋 ──────────────────
+      - name: 네이버 카페 RSS 수집 + Gemini 정제
+        id: sync
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          NAVER_CAFE_RSS_URL: ${{ secrets.NAVER_CAFE_RSS_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/sync-rss.mjs
+
+      - name: 새 글 자동 커밋 & 푸시
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/posts public/images/rss
+          if git diff --cached --quiet; then
+            echo "새 글이 없어 커밋을 건너뜁니다."
+          else
+            git commit -m "chore(rss): 네이버 카페 새 글 자동 발행 [skip ci]"
+            # 기본 GITHUB_TOKEN으로 푸시하므로 이 푸시는 워크플로를 다시 실행하지 않습니다(무한 루프 방지).
+            git pull --rebase --autostash origin main || true
+            git push || echo "푸시 실패: 이번 빌드에는 새 글이 포함되며, 다음 실행 때 다시 커밋됩니다."
+          fi
+
+      # ── 공통: 빌드 → 검색 색인 → 배포 ──────────────────────────────────────
+      - name: Astro 빌드 + Pagefind 검색 색인
+        run: |
+          npx astro build
+          npx pagefind --site dist
+
+      - name: GitHub Pages 설정
+        uses: actions/configure-pages@v5
+
+      - name: 빌드 결과 업로드
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: GitHub Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # ── 배포 후: 신규/수정 URL을 IndexNow로 즉시 알림 ──────────────────────
+      - name: IndexNow 핑 (RSS 신규 글)
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.sync.outputs.new_posts != '0' && steps.sync.outputs.new_posts != ''
+        run: node scripts/indexnow-ping.mjs
+
+      - name: IndexNow 핑 (CMS에서 추가·수정한 글)
+        if: github.event_name == 'push'
+        run: node scripts/indexnow-ping.mjs --changed

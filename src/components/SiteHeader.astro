@@ -1,0 +1,82 @@
+---
+import Icon from './Icon.astro';
+import { siteConfig } from '../utils/site';
+import { isExternalUrl, withBase } from '../utils/url';
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isActive = (url: string) => {
+  if (isExternalUrl(url)) return false;
+  const target = withBase(url).replace(/\/+$/, '') || '/';
+  return target === currentPath;
+};
+---
+<header class="sticky top-0 z-30 border-b border-line bg-page/85 backdrop-blur-md">
+  <div class="container-page flex h-16 items-center gap-3">
+    <a href={withBase('/')} class="flex min-w-0 items-center gap-2.5">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-[var(--accent-contrast)]">
+        <Icon name="leaf" size={18} />
+      </span>
+      <span class="truncate font-heading text-lg font-bold">{siteConfig.siteTitle}</span>
+    </a>
+
+    <nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="주요 메뉴">
+      {siteConfig.navigation.map((item) => {
+        const external = isExternalUrl(item.url);
+        return (
+          <a
+            href={withBase(item.url)}
+            target={external ? '_blank' : undefined}
+            rel={external ? 'noopener noreferrer' : undefined}
+            aria-current={isActive(item.url) ? 'page' : undefined}
+            class="rounded-full px-3.5 py-2 text-sm font-semibold text-muted transition hover:bg-subtle hover:text-ink aria-[current=page]:text-accent"
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2 md:ml-2">
+      <button
+        type="button"
+        data-search-open
+        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface text-muted transition hover:text-ink"
+        aria-label="사이트 검색 열기"
+      >
+        <Icon name="search" size={18} />
+      </button>
+      {siteConfig.cafeUrl && (
+        <a
+          href={siteConfig.cafeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-primary hidden !min-h-10 !px-4 !py-2 text-sm sm:inline-flex"
+        >
+          카페 가입하기
+        </a>
+      )}
+    </div>
+  </div>
+
+  <nav class="container-page flex gap-1 overflow-x-auto pb-2 md:hidden" aria-label="주요 메뉴 (모바일)">
+    {siteConfig.navigation.map((item) => {
+      const external = isExternalUrl(item.url);
+      return (
+        <a
+          href={withBase(item.url)}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
+          aria-current={isActive(item.url) ? 'page' : undefined}
+          class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-muted aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent"
+        >
+          {item.label}
+        </a>
+      );
+    })}
+    {siteConfig.cafeUrl && (
+      <a href={siteConfig.cafeUrl} target="_blank" rel="noopener noreferrer" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-accent sm:hidden">
+        카페 가입
+      </a>
+    )}
+  </nav>
+</header>

@@ -1,0 +1,284 @@
+# Pages CMS 설정 (https://app.pagescms.org)
+# 운영자는 웹 브라우저에서 글 작성, 소개 페이지 편집, 디자인 테마·이벤트 배너 변경을 모두 클릭만으로 할 수 있습니다.
+
+media:
+  input: public/images/uploads
+  output: /images/uploads
+  categories: [image]
+  rename: safe
+
+content:
+  # ───────────────────────────────────────────────────────────
+  # 1. 게시글
+  # ───────────────────────────────────────────────────────────
+  - name: posts
+    label: 게시글 관리 (새 글 작성 및 상단 고정)
+    type: collection
+    path: src/content/posts
+    format: yaml-frontmatter
+    filename:
+      # 주소(URL)에 쓰이는 파일 이름입니다. 영문 소문자·숫자·하이픈만 쓰세요. 예) 2026-12-01-year-end-party
+      template: "{year}-{month}-{day}-post-{hour}{minute}.md"
+      field: create
+    view:
+      fields: [title, pinned, category, pubDate, draft]
+      primary: title
+      sort: [pubDate, title]
+      search: [title, summary]
+      default:
+        sort: pubDate
+        order: desc
+    fields:
+      - name: title
+        label: 제목
+        type: string
+        required: true
+        description: 외부 사람이 검색할 법한 문장으로 쓰면 AI 검색 노출에 유리합니다. 예) 신도림 도림천 송년 산책 모임 안내
+      - name: pinned
+        label: 상단 고정 (📌 중요 안내)
+        type: boolean
+        default: false
+        description: 켜면 메인 화면 맨 위 '중요 안내' 영역에 항상 보입니다.
+      - name: pubDate
+        label: 작성일
+        type: date
+        required: true
+        options:
+          format: yyyy-MM-dd
+      - name: category
+        label: 카테고리
+        type: select
+        required: true
+        default: 공지사항
+        options:
+          values: [공지사항, 모임·행사, 동네 소식, 생활 정보, 맛집·카페]
+      - name: summary
+        label: AI 3줄 요약
+        type: text
+        required: true
+        description: 글의 핵심을 3문장으로 적어 주세요. 상세 페이지 상단 요약 상자와 검색엔진 설명에 쓰입니다.
+      - name: thumbnail
+        label: 대표 썸네일
+        type: image
+        description: 비워 두면 카테고리별 기본 일러스트가 자동으로 표시됩니다.
+      - name: originalUrl
+        label: 카페 원문 URL
+        type: string
+        description: 네이버 카페 원문 글 주소. 상세 페이지 하단 '댓글로 함께하기' 버튼이 이 주소로 연결됩니다.
+      - name: draft
+        label: 비공개 (임시 저장)
+        type: boolean
+        default: false
+        description: 켜 두면 사이트에 공개되지 않습니다.
+      - name: sourceGuid
+        label: RSS 원본 ID (자동 입력, 수정 금지)
+        type: string
+        hidden: true
+      - name: body
+        label: 본문
+        type: rich-text
+        options:
+          format: markdown
+
+  # ───────────────────────────────────────────────────────────
+  # 2. 커뮤니티 소개 (/about)
+  # ───────────────────────────────────────────────────────────
+  - name: aboutPage
+    label: 커뮤니티 핵심 소개 (/about) 편집
+    type: file
+    path: src/data/about.json
+    format: json
+    fields:
+      - name: introTitle
+        label: 소개 제목
+        type: string
+        required: true
+      - name: introLead
+        label: 한 줄 정의 (AI가 가장 먼저 읽는 문장)
+        type: text
+        required: true
+        description: "'신도림 커뮤니티는 ~입니다' 형태로 쓰면 AI 검색 답변에 그대로 인용되기 좋습니다."
+      - name: introBody
+        label: 상세 본문
+        type: text
+        description: 문단을 나누려면 빈 줄을 하나 넣으세요.
+      - name: coreValues
+        label: 핵심 활동 목록
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{title}"
+        fields:
+          - name: title
+            label: 활동 이름
+            type: string
+          - name: description
+            label: 설명
+            type: text
+      - name: milestones
+        label: 주요 연혁
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{period} · {event}"
+        fields:
+          - name: period
+            label: 시기 (예 2024년 3월)
+            type: string
+          - name: event
+            label: 내용
+            type: text
+      - name: faqs
+        label: 자주 묻는 질문 (FAQ)
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{question}"
+        fields:
+          - name: question
+            label: 질문
+            type: string
+          - name: answer
+            label: 답변
+            type: text
+      - name: locationInfo
+        label: 활동 지역
+        type: string
+        default: 서울특별시 구로구 신도림동 일대
+
+  # ───────────────────────────────────────────────────────────
+  # 3. 사이트 디자인 테마 · 이벤트 배너 · 기본 설정
+  # ───────────────────────────────────────────────────────────
+  - name: siteConfig
+    label: 사이트 디자인 테마 · 이벤트 배너 · 기본 설정
+    type: file
+    path: src/data/siteConfig.json
+    format: json
+    fields:
+      - name: design
+        label: 🎨 디자인 테마
+        type: object
+        fields:
+          - name: themePreset
+            label: 컬러 테마 (계절·행사 분위기)
+            type: select
+            default: sage
+            options:
+              values:
+                - name: sage
+                  label: 도림천 세이지 (기본)
+                - name: blossom
+                  label: 봄날 벚꽃 웜톤
+                - name: terracotta
+                  label: 가을 브런치 테라코타
+                - name: winter-navy
+                  label: 연말 네이비 골드
+                - name: minimal-mono
+                  label: 모던 미니멀 모노톤
+          - name: heroStyle
+            label: 메인 상단 배너 스타일
+            type: select
+            default: magazine-card
+            options:
+              values:
+                - name: magazine-card
+                  label: 감성 카드형 (기본)
+                - name: full-visual
+                  label: 와이드 이미지 강조형 (축제·이벤트)
+                - name: minimal-typo
+                  label: 미니멀 글자형 (이미지 없음)
+          - name: headingFont
+            label: 제목 서체
+            type: select
+            default: serif
+            options:
+              values:
+                - name: serif
+                  label: 감성 명조체 - 고운바탕 (기본)
+                - name: sans
+                  label: 깔끔한 고딕체 - 프리텐다드
+          - name: defaultViewMode
+            label: 첫 화면 글 목록 보기 방식
+            type: select
+            default: grid
+            options:
+              values:
+                - name: grid
+                  label: 포토 그리드 (인스타그램형)
+                - name: list
+                  label: 에세이 리스트 (브런치형)
+
+      - name: eventBanner
+        label: 📣 특별 이벤트 상단 배너
+        type: object
+        fields:
+          - name: enabled
+            label: 배너 켜기
+            type: boolean
+            default: false
+          - name: badge
+            label: 배지 문구 (예 EVENT, 공지, D-7)
+            type: string
+            default: EVENT
+          - name: text
+            label: 안내 문구
+            type: string
+          - name: linkText
+            label: 버튼 텍스트
+            type: string
+            default: 자세히 보기
+          - name: linkUrl
+            label: 이동 링크 (사이트 내부는 /about 처럼, 외부는 https:// 로 시작)
+            type: string
+
+      - name: siteTitle
+        label: 사이트 이름
+        type: string
+        required: true
+      - name: siteDescription
+        label: 사이트 설명 (검색 결과에 표시)
+        type: text
+      - name: representativeName
+        label: 운영진 표기명
+        type: string
+        default: 신도림 커뮤니티 운영진
+      - name: heroTitle
+        label: 메인 배너 제목 (줄바꿈 가능)
+        type: text
+      - name: heroSubtitle
+        label: 메인 배너 부제목
+        type: text
+      - name: heroImage
+        label: 메인 배너 이미지
+        type: image
+      - name: cafeUrl
+        label: 네이버 카페 주소 (https://cafe.naver.com/...)
+        type: string
+      - name: indexNowKey
+        label: IndexNow 키 (GitHub Secrets에 등록했다면 비워 두세요)
+        type: string
+      - name: categories
+        label: 카테고리 목록 (메인 화면 탭 순서)
+        type: string
+        list: true
+        description: 새 카테고리를 추가하면 글 작성 화면의 카테고리 목록에도 같은 이름이 있어야 선택할 수 있습니다. (운영 매뉴얼 참고)
+      - name: navigation
+        label: 상단 메뉴
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{label}"
+        fields:
+          - name: label
+            label: 메뉴 이름
+            type: string
+          - name: url
+            label: 링크 (/about 또는 https://...)
+            type: string
+      - name: footerText
+        label: 하단 안내 문구
+        type: text
