@@ -40,18 +40,10 @@ ChatGPT 검색과 Microsoft Copilot은 Bing 색인을 크게 활용합니다.
 
 1. https://www.bing.com/webmasters 접속 → Microsoft 계정(또는 구글 계정)으로 로그인
 2. **Google Search Console에서 가져오기**를 누르면 Step 2에서 등록한 사이트와 사이트맵을 그대로 불러옵니다. (가져오기를 안 쓰면: **사이트 추가** → 주소 입력 → 사이트맵 `https://sindorim-zine.github.io/sitemap-index.xml` 제출)
-3. **IndexNow 키 발급·연결** (새 글이 올라오면 검색엔진에 즉시 알리는 기능)
-   1. Bing Webmaster Tools 왼쪽 메뉴 **IndexNow** → 안내에 나오는 **API 키**를 복사합니다.
-      키를 직접 만들어도 됩니다: PowerShell에서 아래 명령을 실행하면 32자리 키가 나옵니다.
-      ```powershell
-      [guid]::NewGuid().ToString('N')
-      ```
-   2. GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
-      - Name: `INDEXNOW_KEY`
-      - Secret: 복사한 키
-   3. **Actions** 탭 → `Publish & Deploy` → **Run workflow**로 한 번 배포합니다.
-   4. 브라우저에서 `https://sindorim-zine.github.io/키.txt`를 열어 키가 그대로 보이면 연결 완료입니다.
-4. 이후 새 글이 올라올 때마다 GitHub Actions가 자동으로 IndexNow 신호를 보냅니다. (Bing·네이버·Yandex 등 IndexNow 참여 검색엔진에 함께 전달됩니다)
+3. **IndexNow 키 연결** ✅ *(2026-11-23 완료 — 따로 할 일 없음)*
+   - 키는 Pages CMS 기본 설정의 **IndexNow 키** 칸에 들어 있고, 확인 파일 `https://sindorim-zine.github.io/6f8c03a94c6f954ff9f0f2b62d5627de.txt`가 배포되어 있습니다. (공개되는 값이라 비밀이 아닙니다)
+   - 기존 글 전체를 한 번 전송했고, 이후 새 글·수정한 글은 배포할 때마다 자동으로 전송됩니다. (Bing·네이버·Yandex 등 IndexNow 참여 검색엔진에 함께 전달)
+   - 키를 바꾸고 싶으면 CMS의 IndexNow 키 칸에 영문·숫자 8~128자 값을 넣고 저장하면 됩니다.
 
 ---
 
