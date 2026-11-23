@@ -1,20 +1,6 @@
 {
-  "siteTitle": "신도림 커뮤니티",
-  "siteDescription": "서울 구로구 신도림동 이웃들의 모임·행사·동네 소식을 기록하는 네이버 카페 '신도림 커뮤니티'의 공식 웹 아카이브입니다.",
-  "representativeName": "신도림 커뮤니티 운영진",
-  "cafeUrl": "https://cafe.naver.com/wooseongapt",
-  "indexNowKey": "",
-  "heroTitle": "도림천 따라 이어지는\n우리 동네 이야기",
-  "heroSubtitle": "신도림에 사는 이웃들이 함께 만드는 모임, 행사, 생활 정보를 차곡차곡 기록합니다. 실제 대화와 댓글은 네이버 카페에서 이어집니다.",
-  "heroImage": "/images/hero-default.svg",
-  "categories": ["공지사항", "모임·행사", "동네 소식", "생활 정보", "맛집·카페"],
-  "navigation": [
-    { "label": "홈", "url": "/" },
-    { "label": "커뮤니티 소개", "url": "/about" }
-  ],
-  "footerText": "이 사이트는 네이버 카페 '신도림 커뮤니티'의 주요 소식을 정리한 공식 웹 아카이브입니다. 회원 활동과 댓글은 네이버 카페에서 함께해 주세요.",
   "design": {
-    "themePreset": "sage",
+    "themePreset": "winter-navy",
     "heroStyle": "magazine-card",
     "headingFont": "serif",
     "defaultViewMode": "grid"
@@ -25,5 +11,30 @@
     "text": "신도림 커뮤니티 새 소식과 모임 일정을 확인해 보세요!",
     "linkText": "자세히 보기",
     "linkUrl": "/about"
-  }
+  },
+  "siteTitle": "신도림 커뮤니티",
+  "siteDescription": "서울 구로구 신도림동 이웃들의 모임·행사·동네 소식을 기록하는 네이버 카페 '신도림 커뮤니티'의 공식 웹 아카이브입니다.",
+  "representativeName": "신도림 커뮤니티 운영진",
+  "heroTitle": "도림천 따라 이어지는\n우리 동네 이야기",
+  "heroSubtitle": "신도림에 사는 이웃들이 함께 만드는 모임, 행사, 생활 정보를 차곡차곡 기록합니다. 실제 대화와 댓글은 네이버 카페에서 이어집니다.",
+  "heroImage": "/images/hero-default.svg",
+  "cafeUrl": "https://cafe.naver.com/wooseongapt",
+  "categories": [
+    "공지사항",
+    "모임·행사",
+    "동네 소식",
+    "생활 정보",
+    "맛집·카페"
+  ],
+  "navigation": [
+    {
+      "label": "홈",
+      "url": "/"
+    },
+    {
+      "label": "커뮤니티 소개",
+      "url": "/about"
+    }
+  ],
+  "footerText": "이 사이트는 네이버 카페 '신도림 커뮤니티'의 주요 소식을 정리한 공식 웹 아카이브입니다. 회원 활동과 댓글은 네이버 카페에서 함께해 주세요."
 }
