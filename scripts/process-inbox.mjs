@@ -26,6 +26,7 @@ import {
   toSlug,
   writeWithGemini,
 } from './lib/ai-writer.mjs';
+import { downloadImages, extractImages, restoreImages, toPlainForAi } from './lib/body-images.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INBOX_DIR = path.join(ROOT, 'src/inbox');
@@ -131,7 +132,10 @@ async function main() {
     const pubDate = toDateString(data.pubDate);
 
     log(`(${index + 1}/${files.length}) ${file}`);
-    if (sourceText.length < 10) {
+    // 붙여 넣은 사진은 [[사진N]] 표시로 바꿔 두고, AI에는 글자만 보냅니다.
+    const { text: bodyWithMarks, urls: imageUrls } = extractImages(sourceText);
+    const plainText = toPlainForAi(bodyWithMarks);
+    if (plainText.replace(/\[\[사진\d+\]\]/g, '').trim().length < 10) {
       await markFailed(file, raw, '카페 글 내용이 비어 있습니다. 본문을 붙여 넣어 주세요');
       continue;
     }
@@ -145,7 +149,7 @@ async function main() {
     if (!aiBlocked) {
       if (index > 0) await sleep(DELAY_MS);
       try {
-        result = await writeWithGemini({ apiKey, categories, sourceText: scrubPii(sourceText).slice(0, 12000), hintTitle, hintCategory });
+        result = await writeWithGemini({ apiKey, categories, sourceText: scrubPii(plainText).slice(0, 12000), hintTitle, hintCategory });
       } catch (error) {
         const message = (error?.message || String(error)).slice(0, 160);
         log(`  AI 정리 실패: ${message}`);
@@ -160,8 +164,11 @@ async function main() {
 
     const title = scrubPii(result.cleanTitle).trim();
     const category = hintCategory || (categories.includes(result.category) ? result.category : categories[0]);
-    let markdownBody = scrubPii(result.markdownBody).replace(/^#\s+.*\n+/, '').trim();
-    // 대표 사진 외 추가 사진은 본문 아래에 붙입니다.
+    // 본문 속 사진을 내려받아 원래 위치([[사진N]])에 다시 넣습니다. (네이버 이미지는 외부 사이트 표시가 막혀 있어 직접 저장)
+    const { local: bodyImages } = await downloadImages(imageUrls, { root: ROOT, log });
+    if (imageUrls.length) log(`  본문 사진 ${bodyImages.filter(Boolean).length}/${imageUrls.length}장 저장`);
+    let markdownBody = restoreImages(scrubPii(result.markdownBody).replace(/^#\s+.*\n+/, '').trim(), bodyImages);
+    // ③ 사진 추가 칸의 사진: 첫 장은 대표 사진, 나머지는 본문 아래에 붙입니다.
     if (photos.length > 1) {
       markdownBody += `\n\n${photos.slice(1).map((p, i) => `![사진 ${i + 2}](${p})`).join('\n\n')}`;
     }
@@ -175,7 +182,7 @@ async function main() {
       summary: scrubPii(result.summary).replace(/\s+/g, ' ').trim(),
       pinned,
       draft,
-      thumbnail: photos[0],
+      thumbnail: photos[0] || bodyImages.find(Boolean),
       originalUrl,
       body: markdownBody,
     });

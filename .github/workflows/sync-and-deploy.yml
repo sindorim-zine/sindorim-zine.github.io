@@ -54,7 +54,7 @@ jobs:
 
       - name: 정리된 글 커밋 & 푸시
         run: |
-          git add -A src/content/posts src/inbox
+          git add -A src/content/posts src/inbox public/images/uploads
           if git diff --cached --quiet; then
             echo "새로 정리된 글이 없습니다."
           else
