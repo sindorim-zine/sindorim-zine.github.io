@@ -65,6 +65,7 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
     <link rel="alternate" type="text/plain" title="llms.txt" href={withBase('/llms.txt')} />
+    <link rel="alternate" type="application/rss+xml" title={siteConfig.siteTitle} href={withBase('/rss.xml')} />
     {markdownPath && <link rel="alternate" type="text/markdown" href={withBase(markdownPath)} />}
 
     <!-- OpenGraph / Twitter -->
