@@ -15,8 +15,9 @@ const { variant, class: className = '', label } = Astro.props;
   viewBox="0 0 400 500"
   preserveAspectRatio="xMidYMid slice"
   class:list={['illustration', className]}
-  role="img"
-  aria-label={label ?? '기본 일러스트'}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
 >
   <rect width="400" height="500" fill="var(--accent-soft)" />
   <circle cx="320" cy="96" r="44" fill="var(--bg-surface)" opacity="0.75" />

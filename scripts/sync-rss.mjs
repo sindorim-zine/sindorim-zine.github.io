@@ -36,14 +36,16 @@ const MISSING_DETAIL_NOTICE = '자세한 일정과 세부 내용은 하단의 �
 const log = (...args) => console.log('[sync-rss]', ...args);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// process.exit()를 직접 부르면 Windows에서 네트워크 소켓 정리 중 비정상 종료(exit 127)될 수 있어
+// 종료 코드만 0으로 정하고 자연스럽게 끝나도록 합니다.
 function finish(message) {
   if (message) log(message);
-  process.exit(0);
+  process.exitCode = 0;
 }
 
 process.on('unhandledRejection', (error) => {
   console.warn('[sync-rss] 예상치 못한 오류로 이번 수집을 건너뜁니다:', error?.message || error);
-  process.exit(0);
+  process.exitCode = 0;
 });
 
 // ---------------------------------------------------------------------------
@@ -274,14 +276,25 @@ async function transformWithGemini(ai, Type, categories, item) {
 }
 
 // 모델 출력에 남은 개인정보 패턴을 한 번 더 기계적으로 가립니다(이중 안전장치).
+// URL 안의 숫자(네이버 글 번호 등)는 건드리지 않고, 앞뒤가 숫자인 경우(날짜·금액 일부)는 가리지 않습니다.
+function scrubPiiSegment(text) {
+  return text
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[비공개]')
+    // 휴대폰: 010-1234-5678, 01012345678, +82 10-1234-5678
+    .replace(/(?<![\d-])(?:\+82[-\s]?1[016789]|01[016789])[-\s.]?\d{3,4}[-\s.]?\d{4}(?![\d-])/g, '[비공개]')
+    // 지역번호 전화: 02-123-4567, 031-1234-5678 (구분자 필수)
+    .replace(/(?<![\d-])0\d{1,2}[-\s.]\d{3,4}[-\s.]\d{4}(?![\d-])/g, '[비공개]')
+    // 계좌번호 형태: 123-456-789012 (마지막 묶음 4자리 이상이라 날짜 2026-11-20은 제외)
+    .replace(/(?<![\d-])\d{3,6}-\d{2,6}-\d{4,8}(?:-\d{1,6})?(?![\d-])/g, '[비공개]')
+    // 상세 주소: 101동 1203호
+    .replace(/\d{2,4}\s?동\s?\d{2,4}\s?호/g, '[비공개]');
+}
+
 function scrubPii(text) {
   return String(text)
-    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[비공개]')
-    .replace(/(?:\+?82[-\s]?)?0?1[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/g, '[비공개]')
-    .replace(/\b0\d{1,2}[-\s.]\d{3,4}[-\s.]\d{4}\b/g, '[비공개]')
-    // 계좌번호 형태(예: 123-456-789012). 마지막 묶음이 4자리 이상이어야 하므로 날짜(2026-11-20)는 가리지 않습니다.
-    .replace(/\b\d{3,6}-\d{2,6}-\d{4,8}(?:-\d{1,6})?\b/g, '[비공개]')
-    .replace(/\d{2,4}\s?동\s?\d{2,4}\s?호/g, '[비공개]');
+    .split(/(https?:\/\/[^\s)<>"']+)/g)
+    .map((part, i) => (i % 2 === 1 ? part : scrubPiiSegment(part)))
+    .join('');
 }
 
 function toSlug(value, fallbackSeed) {
@@ -388,8 +401,8 @@ async function main() {
 
   if (collected.length === 0) return finish('새로 발행할 글이 없습니다.');
 
-  // 오래된 글부터 처리해 시간 순서를 지킵니다.
-  const queue = collected.sort((a, b) => a.date - b.date).slice(0, MAX_ITEMS_PER_RUN);
+  // 최신 글부터 처리해 새 소식이 먼저 올라오게 합니다. 남은 글은 다음 실행 때 이어서 처리됩니다.
+  const queue = collected.sort((a, b) => b.date - a.date).slice(0, MAX_ITEMS_PER_RUN);
   log(`신규 후보 ${collected.length}건 중 ${queue.length}건을 처리합니다. (1회 최대 ${MAX_ITEMS_PER_RUN}건)`);
 
   let GoogleGenAI, Type;
@@ -411,8 +424,9 @@ async function main() {
       result = await transformWithGemini(ai, Type, categories, item);
     } catch (error) {
       const message = error?.message || String(error);
+      const status = Number(error?.status ?? error?.code);
       log(`  Gemini 변환 실패 → 다음 실행 때 다시 시도합니다 (${message.slice(0, 200)})`);
-      if (/API key|PERMISSION_DENIED|UNAUTHENTICATED|401|403/i.test(message)) {
+      if (status === 401 || status === 403 || /API_KEY_INVALID|API key not valid|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
         log('  API 키 문제로 보여 이번 수집을 중단합니다. GEMINI_API_KEY를 확인하세요.');
         break;
       }

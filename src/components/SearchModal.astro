@@ -79,7 +79,10 @@ const pagefindBase = withBase('/pagefind/');
     if (e.target === dialog) dialog.close();
   });
   document.addEventListener('keydown', (e) => {
-    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement))) {
+    const t = e.target as HTMLElement | null;
+    const typing = !!t && (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t.isContentEditable);
+    if (dialog?.open) return;
+    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
       e.preventDefault();
       dialog?.showModal();
       ensurePagefind();

@@ -67,10 +67,10 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     </div>
 
     {categories.length > 0 && (
-      <div class="tabs mb-6" role="tablist" aria-label="카테고리">
-        <button type="button" class="tab" role="tab" aria-selected="true" data-category-tab="">전체</button>
+      <div class="tabs mb-6" role="group" aria-label="카테고리 필터">
+        <button type="button" class="tab" aria-pressed="true" data-category-tab="">전체</button>
         {categories.map((category) => (
-          <button type="button" class="tab" role="tab" aria-selected="false" data-category-tab={category}>{category}</button>
+          <button type="button" class="tab" aria-pressed="false" data-category-tab={category}>{category}</button>
         ))}
       </div>
     )}
@@ -110,7 +110,7 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
         tab.addEventListener('click', function () {
           var selected = tab.getAttribute('data-category-tab');
           var visible = 0;
-          tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t === tab)); });
+          tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
           items.forEach(function (item) {
             var show = !selected || item.getAttribute('data-category') === selected;
             item.hidden = !show;

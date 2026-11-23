@@ -9,7 +9,7 @@
 // 키가 없거나 전송에 실패해도 절대 실패 코드를 내지 않습니다.
 
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,9 +22,10 @@ const KEY_PATTERN = /^[A-Za-z0-9-]{8,128}$/;
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
 const log = (...args) => console.log('[indexnow]', ...args);
+// process.exit() 대신 종료 코드만 지정해 Windows 소켓 정리 중 비정상 종료를 피합니다.
 const finish = (message) => {
   if (message) log(message);
-  process.exit(0);
+  process.exitCode = 0;
 };
 
 async function resolveKey() {
@@ -50,6 +51,16 @@ function changedPostPaths() {
       .split('\n')
       .map((f) => f.trim())
       .filter((f) => f.endsWith('.md'))
+      // 비공개(draft: true) 글은 사이트에 없으므로 알리지 않습니다.
+      .filter((f) => {
+        try {
+          const content = readFileSync(path.join(ROOT, f), 'utf8');
+          const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content)?.[1] ?? '';
+          return !/^draft\s*:\s*true\s*$/m.test(frontmatter);
+        } catch {
+          return false;
+        }
+      })
       .map((f) => `/posts/${path.basename(f, '.md').toLowerCase()}/`);
   } catch {
     return [];

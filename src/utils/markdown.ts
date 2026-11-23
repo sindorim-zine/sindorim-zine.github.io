@@ -80,7 +80,12 @@ export function postMarkdown(post: Post, site: Site, { headingLevel = 1 }: { hea
 
   const parts = [`${h} ${post.data.title}`, '', meta.join('\n'), ''];
   if (post.data.summary) parts.push(`**핵심 요약:** ${oneLine(post.data.summary)}`, '');
-  const body = (post.body ?? '').trim();
+  // 본문 속 루트 경로(/images/..., /about)를 AI가 바로 쓸 수 있는 절대 주소로 바꿉니다.
+  const root = absoluteUrl('/', site).replace(/\/+$/, '');
+  const body = (post.body ?? '')
+    .trim()
+    .replace(/(\]\()\/(?!\/)/g, `$1${root}/`)
+    .replace(/((?:src|href)=["'])\/(?!\/)/g, `$1${root}/`);
   if (body) {
     // 하위 문서로 넣을 때 본문 제목 단계를 한 단계 내립니다.
     parts.push(headingLevel === 2 ? body.replace(/^(#{1,5}) /gm, '#$1 ') : body, '');
