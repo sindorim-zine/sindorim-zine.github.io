@@ -2,7 +2,7 @@
   "design": {
     "themePreset": "winter-navy",
     "heroStyle": "magazine-card",
-    "headingFont": "songmyung",
+    "headingFont": "pen",
     "bodyFont": "pretendard",
     "defaultViewMode": "grid",
     "defaultSort": "newest"
