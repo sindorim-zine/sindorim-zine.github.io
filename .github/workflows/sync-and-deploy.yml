@@ -75,6 +75,7 @@ jobs:
       - name: Astro 빌드 + Pagefind 검색 색인
         run: |
           npx astro build
+          node scripts/postbuild.mjs
           npx pagefind --site dist
 
       - name: GitHub Pages 설정
