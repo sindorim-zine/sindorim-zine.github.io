@@ -149,17 +149,46 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
     },
   });
 
+  // 1) 모델이 종료됐으면 안내된 후속 모델로 전환
+  // 2) 일시적 혼잡(503·429 등)이면 잠시 기다렸다 재시도, 계속 혼잡하면 다른 flash 모델로 전환
+  const tried = new Set();
+  const queue = [activeModel, ...FALLBACK_MODELS.filter((m) => m !== activeModel)];
   let response;
-  try {
-    response = await request(activeModel);
-  } catch (error) {
-    // 구글이 모델을 종료하면 오류 메시지에 새 모델 이름을 안내합니다. 그 모델로 한 번 자동 전환해 다시 시도합니다.
-    const next = isModelError(error) ? await suggestModel(ai, error) : null;
-    if (!next || next === activeModel) throw error;
-    console.log(`[ai-writer] 모델 ${activeModel} 사용 불가 → ${next}(으)로 자동 전환`);
-    activeModel = next;
-    response = await request(activeModel);
+  let lastError;
+  while (!response && queue.length) {
+    const model = queue.shift();
+    if (tried.has(model)) continue;
+    tried.add(model);
+    for (let attempt = 1; attempt <= 3 && !response; attempt++) {
+      try {
+        response = await request(model);
+        if (model !== activeModel) {
+          console.log(`[ai-writer] ${activeModel} 대신 ${model}(으)로 처리했습니다`);
+          activeModel = model;
+        }
+      } catch (error) {
+        lastError = error;
+        if (isModelError(error)) {
+          const next = await suggestModel(ai, error);
+          if (next && !tried.has(next)) queue.unshift(next);
+          console.log(`[ai-writer] 모델 ${model} 사용 불가${next ? ` → ${next} 시도` : ''}`);
+          break;
+        }
+        if (isTransientError(error) && attempt < 3) {
+          const wait = attempt * 8000;
+          console.log(`[ai-writer] ${model} 일시적 혼잡 → ${wait / 1000}초 후 재시도 (${attempt}/3)`);
+          await new Promise((r) => setTimeout(r, wait));
+          continue;
+        }
+        if (isTransientError(error)) {
+          console.log(`[ai-writer] ${model} 계속 혼잡 → 다른 모델로 전환`);
+          break;
+        }
+        throw error;
+      }
+    }
   }
+  if (!response) throw lastError ?? new Error('AI 응답을 받지 못했습니다');
   const raw = typeof response.text === 'string' ? response.text : '';
   const data = JSON.parse(raw);
   for (const key of ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody']) {
@@ -169,6 +198,14 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
 }
 
 let activeModel = MODEL;
+// 기본 모델이 혼잡하거나 종료됐을 때 차례로 시도할 모델 (공식 문서 기준 현행 flash 계열)
+const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
+
+export function isTransientError(error) {
+  const message = error?.message || String(error);
+  const status = Number(error?.status ?? error?.code);
+  return [429, 500, 502, 503, 504].includes(status) || /UNAVAILABLE|overloaded|high demand|RESOURCE_EXHAUSTED|try again later|DEADLINE_EXCEEDED|INTERNAL/i.test(message);
+}
 
 export function isModelError(error) {
   const message = error?.message || String(error);
