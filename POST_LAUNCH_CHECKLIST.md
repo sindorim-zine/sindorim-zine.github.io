@@ -34,7 +34,7 @@
 
 ---
 
-## ☐ Step 3. ChatGPT·코파일럿·퍼플렉시티 노출 — Bing Webmaster Tools + IndexNow
+## ☑ Step 3. ChatGPT·코파일럿·퍼플렉시티 노출 — Bing Webmaster Tools + IndexNow (등록·IndexNow 완료)
 
 ChatGPT 검색과 Microsoft Copilot은 Bing 색인을 크게 활용합니다.
 
