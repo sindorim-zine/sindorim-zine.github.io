@@ -389,6 +389,15 @@ html[data-view="list"] .feed-title { font-size: 1.15rem; }
 .faq-item[open] .faq-icon { transform: rotate(45deg); }
 
 /* 연혁 타임라인 */
+/* 소개 페이지 수상 이력: 좁은 화면에서는 표 대신 '날짜 / 수상 내용 / 기관' 세로 카드로 */
+.awards-table { border-collapse: separate; border-spacing: 0; }
+@media (max-width: 639px) {
+  .awards-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .awards-table tr { display: grid; gap: 0.15rem; padding: 0.85rem 1rem; }
+  .awards-table tbody tr:first-child { border-top: 0; }
+  .awards-table td { padding: 0; }
+}
+
 .timeline { position: relative; padding-left: 1.75rem; }
 .timeline::before { content: ""; position: absolute; left: 0.45rem; top: 0.4rem; bottom: 0.4rem; width: 2px; background: var(--border-color); }
 .timeline-dot { position: absolute; left: -1.75rem; top: 0.35rem; width: 0.95rem; height: 0.95rem; border-radius: 999px; background: var(--bg-primary); border: 3px solid var(--accent-primary); }

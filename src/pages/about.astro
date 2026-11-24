@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
-import { about, siteConfig } from '../utils/site';
+import { about, paragraphsOf, siteConfig } from '../utils/site';
 import { aboutPageSchema, breadcrumbSchema, faqPageSchema } from '../utils/schema';
 import { withBase } from '../utils/url';
 
@@ -11,8 +11,10 @@ const jsonLd = [
   ...(faqSchema ? [faqSchema] : []),
   breadcrumbSchema([{ name: '홈', path: '/' }, { name: '커뮤니티 소개', path: '/about/' }], Astro.site),
 ];
-const valueIcons = ['chat', 'users', 'heart', 'book'] as const;
-const paragraphs = about.introBody.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+const valueIcons = ['chat', 'home', 'heart', 'users'] as const;
+const activityIcons = ['heart', 'users', 'sparkle', 'book', 'map-pin', 'heart', 'sparkle', 'leaf', 'calendar'] as const;
+const paragraphs = paragraphsOf(about.introBody);
+const activityIntro = paragraphsOf(about.activitiesIntro);
 ---
 <BaseLayout
   title={about.introTitle || '커뮤니티 소개'}
@@ -62,6 +64,63 @@ const paragraphs = about.introBody.split(/\n{2,}/).map((p) => p.trim()).filter(B
             </li>
           ))}
         </ul>
+      </section>
+    )}
+
+    {about.storySections.map((s, i) => (
+      <section class="container-prose prose-body mt-16" aria-labelledby={`story-${i}`}>
+        <h2 id={`story-${i}`} class="section-title !mt-0">{s.title}</h2>
+        {paragraphsOf(s.body).map((p) => <p>{p}</p>)}
+      </section>
+    ))}
+
+    {about.activities.length > 0 && (
+      <section class="container-page mt-16" aria-labelledby="activities-title">
+        <div class="container-prose !px-0">
+          <h2 id="activities-title" class="section-title mb-4">{about.activitiesTitle}</h2>
+          {activityIntro.length > 0 && (
+            <div class="prose-body mb-8">{activityIntro.map((p) => <p>{p}</p>)}</div>
+          )}
+        </div>
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {about.activities.map((a, i) => (
+            <li class="card flex flex-col gap-3 p-6">
+              <span class="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-accent">
+                <Icon name={activityIcons[i % activityIcons.length]} size={18} />
+              </span>
+              <h3 class="text-base font-bold">{a.title}</h3>
+              <p class="text-sm leading-relaxed text-muted">{a.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {about.awards.length > 0 && (
+      <section class="container-prose mt-16" aria-labelledby="awards-title">
+        <h2 id="awards-title" class="section-title mb-2">{about.awardsTitle}</h2>
+        {about.awardsIntro && <p class="mb-6 text-muted">{about.awardsIntro}</p>}
+        <table class="awards-table card w-full overflow-hidden text-left">
+          <thead class="bg-subtle text-sm text-muted">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-semibold">날짜</th>
+              <th scope="col" class="px-4 py-3 font-semibold">수상 내용</th>
+              <th scope="col" class="px-4 py-3 font-semibold">수여 기관</th>
+            </tr>
+          </thead>
+          <tbody>
+            {about.awards.map((a) => (
+              <tr class="border-t border-line">
+                <td class="whitespace-nowrap px-4 py-3 text-sm tabular-nums text-muted">{a.date}</td>
+                <td class="px-4 py-3 font-semibold">
+                  {a.title}
+                  {a.upcoming && <span class="chip ml-1.5 align-middle">수상 예정</span>}
+                </td>
+                <td class="px-4 py-3 text-sm">{a.issuer}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     )}
 

@@ -111,10 +111,36 @@ export type AboutData = {
   milestones: { period: string; event: string }[];
   faqs: { question: string; answer: string }[];
   locationInfo: string;
+  /** 카페 개설 연도 (예: '2008') — 구조화 데이터 foundingDate에 사용 */
+  foundingYear: string;
+  /** 소개 본문 아래 주제별 이야기 (제목 + 문단) */
+  storySections: { title: string; body: string }[];
+  activitiesTitle: string;
+  activitiesIntro: string;
+  activities: { title: string; description: string }[];
+  awardsTitle: string;
+  awardsIntro: string;
+  awards: AboutAward[];
+};
+
+export type AboutAward = {
+  /** 화면에 보이는 날짜 그대로 (예: '2015. 12. 05.' 또는 '2020년') */
+  date: string;
+  title: string;
+  issuer: string;
+  /** 날짜가 오늘(한국 시간) 이후면 true — 빌드할 때마다 자동 계산 */
+  upcoming: boolean;
 };
 
 const rawAbout = aboutJson as Record<string, any>;
 const list = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]).filter(Boolean) : []);
+const str = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+
+/** '2026. 12. 03.' · '2026-12-03' · '2026년 12월 3일' → '2026-12-03' (연도만 있으면 '') */
+export function awardDay(date: string): string {
+  const m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(date);
+  return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : '';
+}
 
 export const about: AboutData = {
   introTitle: text(rawAbout.introTitle),
@@ -124,7 +150,30 @@ export const about: AboutData = {
   milestones: list(rawAbout.milestones),
   faqs: list<{ question: string; answer: string }>(rawAbout.faqs).filter((f) => f.question && f.answer),
   locationInfo: text(rawAbout.locationInfo, '서울특별시 구로구 신도림동 일대'),
+  foundingYear: /^\d{4}$/.test(str(rawAbout.foundingYear)) ? str(rawAbout.foundingYear) : '',
+  storySections: list<Record<string, unknown>>(rawAbout.storySections)
+    .map((s) => ({ title: str(s.title), body: str(s.body) }))
+    .filter((s) => s.title && s.body),
+  activitiesTitle: str(rawAbout.activitiesTitle) || '신커가 함께하는 봉사활동',
+  activitiesIntro: str(rawAbout.activitiesIntro),
+  activities: list<Record<string, unknown>>(rawAbout.activities)
+    .map((a) => ({ title: str(a.title), description: str(a.description) }))
+    .filter((a) => a.title && a.description),
+  awardsTitle: str(rawAbout.awardsTitle) || '수상 이력',
+  awardsIntro: str(rawAbout.awardsIntro),
+  awards: list<Record<string, unknown>>(rawAbout.awards)
+    .map((a) => {
+      const date = str(a.date);
+      const day = awardDay(date);
+      return { date, title: str(a.title), issuer: str(a.issuer), upcoming: !!day && day > todayKst() };
+    })
+    .filter((a) => a.date && a.title),
 };
+
+/** 본문 텍스트를 빈 줄 기준 문단 배열로 */
+export function paragraphsOf(body: string): string[] {
+  return body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+}
 
 /** 정렬용 발행 시각(같은 날 글 구분). 없으면 0 */
 export function publishedTime(post: Post): number {

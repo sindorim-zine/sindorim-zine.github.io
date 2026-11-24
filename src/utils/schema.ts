@@ -15,6 +15,8 @@ function websiteId(site: Site) {
 }
 
 export function organizationSchema(site: Site) {
+  // 아직 받지 않은 '수상 예정' 항목은 구조화 데이터에 넣지 않습니다.
+  const awards = about.awards.filter((a) => !a.upcoming).map((a) => `${a.date} ${a.title}${a.issuer ? ` (${a.issuer})` : ''}`);
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -22,8 +24,17 @@ export function organizationSchema(site: Site) {
     name: siteConfig.siteTitle,
     ...(siteConfig.alternateNames.length ? { alternateName: siteConfig.alternateNames } : {}),
     ...(siteConfig.subOrganizations.length
-      ? { subOrganization: siteConfig.subOrganizations.map((name) => ({ '@type': 'Organization', name, parentOrganization: { '@id': orgId(site) } })) }
+      ? {
+          subOrganization: siteConfig.subOrganizations.map((name) => ({
+            '@type': 'Organization',
+            name,
+            parentOrganization: { '@id': orgId(site) },
+            // 수상 이력은 봉사단(과 소속 봉사자)이 받은 것이므로 봉사단에 붙입니다.
+            ...(name.includes('봉사') && awards.length ? { award: awards } : {}),
+          })),
+        }
       : {}),
+    ...(about.foundingYear ? { foundingDate: about.foundingYear } : {}),
     url: absoluteUrl('/', site),
     description: siteConfig.siteDescription,
     logo: absoluteUrl('/favicon.svg', site),

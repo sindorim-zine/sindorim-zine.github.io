@@ -209,8 +209,12 @@ content:
         label: 상세 본문
         type: text
         description: 문단을 나누려면 빈 줄을 하나 넣으세요.
+      - name: foundingYear
+        label: 카페 개설 연도 (숫자 4자리, 예 2008)
+        type: string
+        description: 검색엔진·AI에 '언제 생긴 단체인지' 알려 주는 값입니다.
       - name: coreValues
-        label: 핵심 활동 목록
+        label: 핵심 활동 목록 ('우리가 하는 일' 카드 — 한두 문장으로 짧게)
         type: object
         list:
           collapsible:
@@ -223,6 +227,68 @@ content:
           - name: description
             label: 설명
             type: text
+      - name: storySections
+        label: 주제별 소개 (카드 아래에 제목 + 문단으로 표시)
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{title}"
+        fields:
+          - name: title
+            label: 제목
+            type: string
+          - name: body
+            label: 본문
+            type: text
+            description: 문단을 나누려면 빈 줄을 하나 넣으세요.
+      - name: activitiesTitle
+        label: 봉사활동 섹션 제목
+        type: string
+        default: 신커가 함께하는 봉사활동
+      - name: activitiesIntro
+        label: 봉사활동 섹션 머리말
+        type: text
+        description: 문단을 나누려면 빈 줄을 하나 넣으세요.
+      - name: activities
+        label: 봉사활동 분야 목록
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{title}"
+        fields:
+          - name: title
+            label: 분야 이름
+            type: string
+          - name: description
+            label: 설명
+            type: text
+      - name: awardsTitle
+        label: 수상 이력 섹션 제목
+        type: string
+        default: 수상 이력
+      - name: awardsIntro
+        label: 수상 이력 머리말
+        type: string
+      - name: awards
+        label: 수상 이력 (적은 순서대로 표시)
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{date} · {title} · {issuer}"
+        fields:
+          - name: date
+            label: 날짜 (예 2015. 12. 05. 또는 2020년)
+            type: string
+            description: 날짜가 오늘 이후면 사이트에 '수상 예정' 표시가 자동으로 붙고, 그날이 지나면 저절로 사라집니다.
+          - name: title
+            label: 수상 내용
+            type: string
+          - name: issuer
+            label: 수여 기관
+            type: string
       - name: milestones
         label: 주요 연혁
         type: object

@@ -46,6 +46,8 @@ export function coreContextMarkdown(site: Site, { full }: { full: boolean }): st
     lines.push('');
   }
 
+  if (full) lines.push(...aboutDetailMarkdown(2));
+
   if (about.milestones.length) {
     lines.push('## 연혁', '');
     for (const m of about.milestones) lines.push(`- ${m.period}: ${oneLine(m.event)}`);
@@ -100,6 +102,30 @@ export function postMarkdown(post: Post, site: Site, { headingLevel = 1 }: { hea
   return parts.join('\n');
 }
 
+/** 소개 페이지의 주제별 이야기·봉사활동·수상 이력 (level = 섹션 제목의 # 개수) */
+function aboutDetailMarkdown(level: 2 | 3): string[] {
+  const h = '#'.repeat(level);
+  const lines: string[] = [];
+  for (const s of about.storySections) lines.push(`${h} ${s.title}`, '', s.body, '');
+  if (about.activities.length) {
+    lines.push(`${h} ${about.activitiesTitle}`, '');
+    if (about.activitiesIntro) lines.push(about.activitiesIntro, '');
+    for (const a of about.activities) lines.push(`- **${a.title}**: ${oneLine(a.description)}`);
+    lines.push('');
+  }
+  if (about.awards.length) {
+    lines.push(`${h} ${about.awardsTitle}`, '');
+    if (about.awardsIntro) lines.push(about.awardsIntro, '');
+    lines.push('| 날짜 | 수상 내용 | 수여 기관 |', '|---|---|---|');
+    const cell = (v: string) => oneLine(v).replace(/\|/g, '\\|');
+    for (const a of about.awards) {
+      lines.push(`| ${cell(a.date)} | ${cell(a.title)}${a.upcoming ? ' (수상 예정)' : ''} | ${cell(a.issuer)} |`);
+    }
+    lines.push('');
+  }
+  return lines;
+}
+
 export function aboutMarkdown(site: Site): string {
   const lines: string[] = [];
   lines.push(`# ${about.introTitle || `${siteConfig.siteTitle} 소개`}`, '');
@@ -116,6 +142,7 @@ export function aboutMarkdown(site: Site): string {
     lines.push('## 핵심 활동', '');
     for (const v of about.coreValues) lines.push(`### ${v.title}`, '', v.description, '');
   }
+  lines.push(...aboutDetailMarkdown(2));
   if (about.milestones.length) {
     lines.push('## 연혁', '');
     for (const m of about.milestones) lines.push(`- **${m.period}**: ${m.event}`);
