@@ -142,7 +142,7 @@ content:
       - name: originalUrl
         label: ② 공식 안내 주소 (제보할 때 필수)
         type: string
-        description: "주최 측 공식 페이지·공고 주소. 상세 페이지의 '공식 안내 보기' 버튼으로 연결됩니다. 개인 블로그·SNS 후기보다는 공식 주소를 넣어 주세요."
+        description: "주최 측 공식 페이지·공고 주소. 상세 페이지의 '공식 안내 보기' 버튼으로 연결됩니다. 개인 블로그·SNS 후기보다는 공식 주소를 넣어 주세요. 행사를 어디서 찾을지 모르겠다면 왼쪽 메뉴 '📌 외부 행사 정보 찾는 곳'을 보세요."
       - name: body
         label: ③ 안내 내용 (제보할 때는 공식 안내문을 붙여 넣기)
         type: text
@@ -196,6 +196,42 @@ content:
       - name: aiDone
         type: boolean
         hidden: true
+
+  # ───────────────────────────────────────────────────────────
+  # 0-2. 📌 외부 행사 정보 찾는 곳 (운영진 전용 참고 목록 — 사이트에는 공개되지 않음)
+  # ───────────────────────────────────────────────────────────
+  - name: eventSources
+    label: 📌 외부 행사 정보 찾는 곳 (운영진 참고 사이트)
+    type: file
+    path: src/data/eventSources.json
+    format: json
+    fields:
+      - name: guide
+        label: 사용법
+        type: text
+        description: 사이트에는 보이지 않는 운영진 전용 메모입니다. 자유롭게 고쳐 쓰세요.
+      - name: sites
+        label: 참고 사이트 목록 (펼쳐서 주소를 복사 → 브라우저 새 탭에 붙여 넣기)
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{category} · {name}"
+        fields:
+          - name: category
+            label: 분류
+            type: select
+            options:
+              values: [우리 동네, 서울·전국 행사, 팝업·브랜드, 체험·교육·모집, 봉사, 기타]
+          - name: name
+            label: 사이트 이름
+            type: string
+          - name: url
+            label: 주소
+            type: string
+          - name: note
+            label: 무엇을 찾기 좋은지 · 주의할 점
+            type: text
 
   # ───────────────────────────────────────────────────────────
   # 1. 발행된 글 관리 (수정·고정·비공개 전환, 직접 작성)
