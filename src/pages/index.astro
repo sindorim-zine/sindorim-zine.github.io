@@ -28,7 +28,6 @@ const categories = collectCategories(feed);
 const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
 // 운영자가 기본 정렬을 바꾸면 키도 바뀌어, 기존 방문자에게도 새 기본 정렬이 먼저 적용됩니다.
 const sortStorageKey = `sindorim-sort-pref-${defaultSort}`;
-const sortHeadings = { newest: '최신 소식', event: '다가오는 행사', oldest: '처음부터 보는 소식', title: '제목순 소식' };
 const illustrationVariants = ['notice', 'meetup', 'local', 'life', 'food', 'volunteer'] as const;
 const feedUrl = withBase('/feed.json');
 ---
@@ -71,50 +70,12 @@ const feedUrl = withBase('/feed.json');
     </section>
   )}
 
-  {externalShown.length > 0 && (
-    <section class="container-page mt-12" aria-labelledby="external-title">
-      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 id="external-title" class="section-title"><span aria-hidden="true">🧭</span> 가볼 만한 행사</h2>
-          <p class="mt-1 text-sm text-muted">신도림에서 다녀오기 좋은 외부 행사 소식이에요. 신커 주최가 아니며, 참여는 각자 선택입니다.</p>
-        </div>
-        {externalUpcoming.length > externalShown.length && (
-          <a href={withBase('/archive/')} class="text-sm font-semibold text-muted hover:text-ink">더 보기 ({externalUpcoming.length - externalShown.length}개) →</a>
-        )}
-      </div>
-      <ul class="external-list card divide-y divide-[var(--border-color)]">
-        {externalShown.map((post) => {
-          const event = eventOf(post);
-          const meta = [event?.location, (post.data.feeInfo ?? '').trim()].filter(Boolean).join(' · ');
-          return (
-            <li>
-              <a href={withBase(postPath(post.id))} class="group flex items-start gap-3 px-4 py-3.5 transition hover:bg-[var(--bg-subtle)] sm:items-center sm:px-5">
-                {event && (
-                  <span class="external-date shrink-0" aria-hidden="true">
-                    <span class="block text-[0.7rem] font-semibold">{Number(event.start.slice(5, 7))}월</span>
-                    <span class="block text-lg font-bold leading-none">{Number(event.start.slice(8, 10))}</span>
-                  </span>
-                )}
-                <span class="min-w-0 flex-1">
-                  <span class="title-readable block truncate text-[0.98rem] group-hover:text-accent">{post.data.title}</span>
-                  <span class="mt-0.5 block truncate text-xs text-muted">
-                    {event && <span>{formatEvent(event)}</span>}{event && meta && ' · '}{meta}
-                  </span>
-                </span>
-                <Icon name="arrow-right" size={15} class="mt-1 shrink-0 text-muted sm:mt-0" />
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  )}
-
   <section class="container-page mt-14" aria-labelledby="feed-title">
     <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p class="eyebrow mb-1">Latest Stories</p>
-        <h2 id="feed-title" class="section-title" data-sort-headings={JSON.stringify(sortHeadings)}>{sortHeadings[defaultSort]}</h2>
+        {/* 제목은 정렬 방식과 관계없이 고정합니다(정렬은 오른쪽 선택 상자에 보임). */}
+        <h2 id="feed-title" class="section-title"><span aria-hidden="true">🏡</span> 신도림 커뮤니티 소식</h2>
+        <p class="mt-1 text-sm text-muted">신커 회원들의 모임·봉사·기부·동네 소식을 모았어요.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
       {feed.length > 1 && (
@@ -180,6 +141,45 @@ const feedUrl = withBase('/feed.json');
     )}
   </section>
 
+  {externalShown.length > 0 && (
+    <section class="container-page mt-16" aria-labelledby="external-title">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 id="external-title" class="section-title"><span aria-hidden="true">🧭</span> 가볼 만한 행사</h2>
+          <p class="mt-1 text-sm text-muted">신도림에서 다녀오기 좋은 외부 행사 소식이에요. 신커 주최가 아니며, 참여는 각자 선택입니다.</p>
+        </div>
+        {externalUpcoming.length > externalShown.length && (
+          <a href={withBase('/archive/')} class="text-sm font-semibold text-muted hover:text-ink">더 보기 ({externalUpcoming.length - externalShown.length}개) →</a>
+        )}
+      </div>
+      <ul class="external-list card divide-y divide-[var(--border-color)]">
+        {externalShown.map((post) => {
+          const event = eventOf(post);
+          const meta = [event?.location, (post.data.feeInfo ?? '').trim()].filter(Boolean).join(' · ');
+          return (
+            <li>
+              <a href={withBase(postPath(post.id))} class="group flex items-start gap-3 px-4 py-3.5 transition hover:bg-[var(--bg-subtle)] sm:items-center sm:px-5">
+                {event && (
+                  <span class="external-date shrink-0" aria-hidden="true">
+                    <span class="block text-[0.7rem] font-semibold">{Number(event.start.slice(5, 7))}월</span>
+                    <span class="block text-lg font-bold leading-none">{Number(event.start.slice(8, 10))}</span>
+                  </span>
+                )}
+                <span class="min-w-0 flex-1">
+                  <span class="title-readable block truncate text-[0.98rem] group-hover:text-accent">{post.data.title}</span>
+                  <span class="mt-0.5 block truncate text-xs text-muted">
+                    {event && <span>{formatEvent(event)}</span>}{event && meta && ' · '}{meta}
+                  </span>
+                </span>
+                <Icon name="arrow-right" size={15} class="mt-1 shrink-0 text-muted sm:mt-0" />
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+
   <!-- '더 보기'로 불러온 글을 그릴 때 쓰는 카드 틀 (PostCard와 같은 모양) -->
   <template id="feed-card-template">
     <li class="feed-item">
@@ -207,12 +207,9 @@ const feedUrl = withBase('/feed.json');
     (function () {
       var feedEl = document.getElementById('feed');
       var select = document.querySelector('[data-sort-select]');
-      var heading = document.getElementById('feed-title');
       var moreBtn = document.getElementById('feed-more');
       var empty = document.getElementById('feed-empty');
       var tabs = document.querySelectorAll('[data-category-tab]');
-      var headings = {};
-      try { headings = JSON.parse(heading.getAttribute('data-sort-headings') || '{}'); } catch (e) {}
 
       // ── 보기 방식: 그리드 / 리스트 ─────────────────────────────────────
       var root = document.documentElement;
@@ -365,7 +362,6 @@ const feedUrl = withBase('/feed.json');
           empty.hidden = !message;
         }
         if (select) select.value = state.sort;
-        if (heading && headings[state.sort]) heading.textContent = headings[state.sort];
       }
 
       // 정렬·카테고리를 바꾸면 전체 글 기준으로 다시 골라야 하므로 필요할 때 전체 목록을 받습니다.
