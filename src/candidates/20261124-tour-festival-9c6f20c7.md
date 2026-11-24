@@ -1,23 +1,23 @@
 ---
-decision: pending
-sourceId: tour-festival:4108260
-sourceName: 한국관광공사 TourAPI · 전국 행사·축제 정보
-title: 2026 HUG RUN 허그런
-eventDate: 2026-12-05
-eventLabel: 축제일
-eventLocation: 상암월드컵공원 평화의 광장
-organizer: 동방사회복지회
+decision: publish
+aiCheck: 🟢 광고성 낮음 — 사회복지재단이 주최하는 비영리 목구의 기부 마라톤 행사입니다.
 originalUrl: https://hugrun.kr/
-collectedAt: 2026-11-24
-aiDone: true
-aiStatus: ✅ 11월 24일 11:34 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
+title: 2026 HUG RUN 허그런
 summary: 위기아동 지원을 위한 기부 마라톤 '2026 HUG RUN 허그런'이 2026년 12월 5일 상암월드컵공원 평화의 광장에서
   열립니다. 행사는 오전 7시부터 11시까지 5㎞ 및 10㎞ 코스로 운영됩니다. 참가비 전액은 위기아동 지원 사업에 기부되며 참가자에게는 기념
   메달과 키트가 제공됩니다.
+eventDate: 2026-12-05
+eventEndDate: 2026-11-24
+eventLabel: 축제일
+eventLocation: 상암월드컵공원 평화의 광장
+organizer: 동방사회복지회
 feeInfo: 참가비 전액 기부
-aiCheck: 🟢 광고성 낮음 — 사회복지재단이 주최하는 비영리 목구의 기부 마라톤 행사입니다.
+sourceName: 한국관광공사 TourAPI · 전국 행사·축제 정보
+aiStatus: ✅ 11월 24일 11:34 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
+sourceId: tour-festival:4108260
+collectedAt: 2026-11-24
+aiDone: true
 ---
-
 ## 행사 개요
 - 행사명: 2026 HUG RUN 허그런
 - 일시: 2026년 12월 5일(토) 07:00 ~ 11:00
