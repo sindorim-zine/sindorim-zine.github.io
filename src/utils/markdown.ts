@@ -84,8 +84,14 @@ export function postMarkdown(post: Post, site: Site, { headingLevel = 1 }: { hea
   const event = eventOf(post);
   if (event) meta.push(`- ${event.label}: ${formatEvent(event).replace(` ${event.label}`, '')} (${event.start}${event.end !== event.start ? ` ~ ${event.end}` : ''})`);
   if (event?.location) meta.push(`- 장소: ${event.location}`);
+  if (post.data.external) {
+    meta.push('- 외부 행사 소식: 신도림 커뮤니티가 주최하지 않는 행사를 회원들께 미리 알리는 글입니다 (참여는 각자 선택).');
+    if (post.data.organizer) meta.push(`- 주최: ${post.data.organizer}`);
+    if (post.data.feeInfo) meta.push(`- 요금: ${post.data.feeInfo}`);
+    if (post.data.sourceName) meta.push(`- 정보 출처: ${post.data.sourceName}`);
+  }
   if (post.data.pinned) meta.push('- 상단 고정 중요 안내');
-  if (isHttpUrl(post.data.originalUrl)) meta.push(`- 네이버 카페 원문: ${post.data.originalUrl}`);
+  if (isHttpUrl(post.data.originalUrl)) meta.push(`- ${post.data.external ? '공식 안내' : '네이버 카페 원문'}: ${post.data.originalUrl}`);
 
   const parts = [`${h} ${post.data.title}`, '', meta.join('\n'), ''];
   if (post.data.summary) parts.push(`**핵심 요약:** ${oneLine(post.data.summary)}`, '');

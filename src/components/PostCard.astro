@@ -10,7 +10,7 @@ interface Props {
   eager?: boolean;
 }
 const { post, eager = false } = Astro.props;
-const { title, summary, category, pubDate, pinned } = post.data;
+const { title, summary, category, pubDate, pinned, external } = post.data;
 const thumb = thumbnailOf(post);
 const event = eventOf(post);
 ---
@@ -43,6 +43,7 @@ const event = eventOf(post);
       <div class="flex flex-wrap items-center gap-1.5">
         {pinned && <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>}
         <span class="chip">{category}</span>
+        {external && <span class="chip chip-external" title="신도림 커뮤니티가 주최하지 않는 외부 행사 소식입니다">외부 행사</span>}
       </div>
       <h3 class="feed-title">{title}</h3>
       {event && <EventBadge event={event} />}

@@ -311,7 +311,7 @@ export function illustrationFor(category: string): IllustrationVariant {
   const c = category || '';
   if (/공지|안내|알림/.test(c)) return 'notice';
   if (/봉사|기부|나눔|후원/.test(c)) return 'volunteer';
-  if (/모임|행사|이벤트|축제/.test(c)) return 'meetup';
+  if (/모임|행사|이벤트|축제|가볼|공연|전시/.test(c)) return 'meetup';
   if (/맛집|카페|음식|식당|먹/.test(c)) return 'food';
   if (/생활|정보|팁|육아|교육/.test(c)) return 'life';
   if (/동네|소식|뉴스|지역/.test(c)) return 'local';

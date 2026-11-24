@@ -131,7 +131,8 @@ export function blogPostingSchema(post: Post, site: Site) {
       logo: { '@type': 'ImageObject', url: absoluteUrl('/images/og-default.png', site) },
     },
     isPartOf: { '@id': websiteId(site) },
-    contentLocation: { '@type': 'Place', name: AREA },
+    // 외부 행사는 신도림 밖에서 열릴 수 있으므로 글의 배경 장소를 신도림동으로 표시하지 않습니다.
+    ...(post.data.external ? {} : { contentLocation: { '@type': 'Place', name: AREA } }),
   };
   if (thumb) data.image = absoluteUrl(thumb, site);
   if (isHttpUrl(post.data.originalUrl)) data.isBasedOn = post.data.originalUrl;
@@ -158,12 +159,18 @@ export function eventSchema(post: Post, site: Site) {
     url,
     inLanguage: 'ko-KR',
     eventStatus: 'https://schema.org/EventScheduled',
-    organizer: { '@id': orgId(site), '@type': 'Organization', name: siteConfig.siteTitle, url: absoluteUrl('/', site) },
   };
+  // 외부 행사는 신커가 주최한 것이 아니므로 주최자를 신커로 표시하지 않습니다(AI가 '신커 주최'로 오해하지 않도록).
+  const external = post.data.external;
+  const organizer = (post.data.organizer ?? '').trim();
+  if (!external) data.organizer = { '@id': orgId(site), '@type': 'Organization', name: siteConfig.siteTitle, url: absoluteUrl('/', site) };
+  else if (organizer) data.organizer = { '@type': 'Organization', name: organizer };
   if (thumb) data.image = absoluteUrl(thumb, site);
   if (event.location) {
     data.eventAttendanceMode = 'https://schema.org/OfflineEventAttendanceMode';
-    data.location = { '@type': 'Place', name: event.location, address: { '@type': 'PostalAddress', streetAddress: event.location, addressLocality: '구로구', addressRegion: '서울특별시', addressCountry: 'KR' } };
+    data.location = external
+      ? { '@type': 'Place', name: event.location, address: { '@type': 'PostalAddress', streetAddress: event.location, addressCountry: 'KR' } }
+      : { '@type': 'Place', name: event.location, address: { '@type': 'PostalAddress', streetAddress: event.location, addressLocality: '구로구', addressRegion: '서울특별시', addressCountry: 'KR' } };
   }
   if (isHttpUrl(post.data.originalUrl)) data.sameAs = post.data.originalUrl;
   return data;

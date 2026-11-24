@@ -232,6 +232,13 @@
   }
   [data-theme="minimal-mono"] .chip { color: var(--text-primary); }
 
+  /* 외부 행사 소식: 신커 주최 글과 한눈에 구분되도록 테두리만 있는 칩 */
+  .chip-external {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed var(--text-muted);
+  }
+
   .chip-pinned {
     background: var(--accent-ink);
     color: var(--accent-contrast);

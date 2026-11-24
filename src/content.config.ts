@@ -34,6 +34,11 @@ const posts = defineCollection({
     originalUrl: optionalText,
     sourceGuid: optionalText,
     draft: z.boolean().default(false),
+    // 외부 행사 소식(신커 주최가 아닌 축제·공연·팝업·체험 모집 등). 🔎 외부 행사 후보 검토에서 '공개'하면 자동으로 켜집니다.
+    external: z.boolean().default(false),
+    organizer: optionalText, // 외부 행사의 주최·주관 (원문에 적힌 이름 그대로)
+    sourceName: optionalText, // 정보 출처 이름 (예: 서울시 문화행사 정보, 운영진 제보)
+    feeInfo: optionalText, // 요금 (예: 무료, 1만 원)
   }),
 });
 

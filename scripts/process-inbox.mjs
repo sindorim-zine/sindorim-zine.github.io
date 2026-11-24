@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 import {
   DEFAULT_CATEGORIES,
+  EXTERNAL_CATEGORY,
   buildPostMarkdown,
   isAuthError,
   kstDateString,
@@ -69,7 +70,10 @@ function toDateString(value) {
 async function loadCategories() {
   try {
     const config = JSON.parse(await readFile(SITE_CONFIG, 'utf8'));
-    const list = Array.isArray(config.categories) ? config.categories.filter((c) => typeof c === 'string' && c.trim()) : [];
+    // '가볼 만한 행사'는 🔎 외부 행사 후보 검토 전용이라 카페 글 AI 분류에서는 빼 둡니다.
+    const list = Array.isArray(config.categories)
+      ? config.categories.filter((c) => typeof c === 'string' && c.trim() && c !== EXTERNAL_CATEGORY)
+      : [];
     return list.length ? list : DEFAULT_CATEGORIES;
   } catch {
     return DEFAULT_CATEGORIES;

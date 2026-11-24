@@ -7,6 +7,8 @@ import { createHash } from 'node:crypto';
 
 export const MODEL = (process.env.GEMINI_MODEL || 'gemini-3.8-flash').trim();
 export const DEFAULT_CATEGORIES = ['공지사항', '모임·행사', '봉사·기부', '동네 소식', '생활 정보', '맛집·카페'];
+/** 외부 행사 소식 전용 카테고리 (🔎 외부 행사 후보 검토에서 '공개'한 글) */
+export const EXTERNAL_CATEGORY = '가볼 만한 행사';
 
 // ---------------------------------------------------------------------------
 // 개인정보 2차 필터
@@ -91,7 +93,7 @@ export function cleanEventDates({ eventDate, eventEndDate, eventLabel, eventLoca
   return { eventDate: start, ...(end ? { eventEndDate: end } : {}), eventLabel: label, ...(location ? { eventLocation: location } : {}) };
 }
 
-export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, eventLocation, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body }) {
+export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, eventLocation, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body, external = false, organizer, sourceName, feeInfo }) {
   const lines = [
     '---',
     `title: ${JSON.stringify(title)}`,
@@ -108,6 +110,12 @@ export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, even
   ];
   if (thumbnail) lines.push(`thumbnail: ${JSON.stringify(thumbnail)}`);
   if (originalUrl) lines.push(`originalUrl: ${JSON.stringify(originalUrl)}`);
+  if (external) {
+    lines.push('external: true');
+    if (organizer) lines.push(`organizer: ${JSON.stringify(organizer)}`);
+    if (sourceName) lines.push(`sourceName: ${JSON.stringify(sourceName)}`);
+    if (feeInfo) lines.push(`feeInfo: ${JSON.stringify(feeInfo)}`);
+  }
   lines.push('---', '', String(body).trim(), '');
   return lines.join('\n');
 }
@@ -167,34 +175,44 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
     .filter((l) => l !== '')
     .join('\n');
 
+  const data = await generateJson({
+    ai,
+    userText,
+    systemInstruction: systemInstruction(categories),
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        cleanTitle: { type: Type.STRING, description: '외부 검색 최적화 한국어 제목' },
+        urlSlug: { type: Type.STRING, description: '영문 소문자·숫자·하이픈 3~6단어' },
+        summary: { type: Type.STRING, description: '원문 사실만 담은 3문장 요약' },
+        category: { type: Type.STRING, enum: categories, description: '카테고리' },
+        markdownBody: { type: Type.STRING, description: '마크다운 본문' },
+        eventDate: { type: Type.STRING, description: '핵심 행사 날짜 YYYY-MM-DD, 없으면 빈 문자열' },
+        eventEndDate: { type: Type.STRING, description: '기간 마지막 날 YYYY-MM-DD, 없으면 빈 문자열' },
+        eventLabel: { type: Type.STRING, description: '날짜 의미 2~6글자, 없으면 빈 문자열' },
+        eventLocation: { type: Type.STRING, description: '원문에 적힌 행사 장소 이름, 없으면 빈 문자열' },
+      },
+      required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
+      propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
+    },
+  });
+  for (const key of ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody']) {
+    if (typeof data[key] !== 'string' || !data[key].trim()) throw new Error(`AI 응답에 ${key}가 비어 있습니다`);
+  }
+  return data;
+}
+
+/**
+ * Gemini에 JSON 응답을 요청합니다.
+ * 1) 모델이 종료됐으면 안내된 후속 모델로 전환
+ * 2) 일시적 혼잡(503·429 등)이면 잠시 기다렸다 재시도, 계속 혼잡하면 다른 flash 모델로 전환
+ */
+async function generateJson({ ai, userText, systemInstruction: instruction, responseSchema, temperature = 0.2 }) {
   const request = (model) => ai.models.generateContent({
     model,
     contents: [{ role: 'user', parts: [{ text: userText }] }],
-    config: {
-      systemInstruction: systemInstruction(categories),
-      temperature: 0.2,
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          cleanTitle: { type: Type.STRING, description: '외부 검색 최적화 한국어 제목' },
-          urlSlug: { type: Type.STRING, description: '영문 소문자·숫자·하이픈 3~6단어' },
-          summary: { type: Type.STRING, description: '원문 사실만 담은 3문장 요약' },
-          category: { type: Type.STRING, enum: categories, description: '카테고리' },
-          markdownBody: { type: Type.STRING, description: '마크다운 본문' },
-          eventDate: { type: Type.STRING, description: '핵심 행사 날짜 YYYY-MM-DD, 없으면 빈 문자열' },
-          eventEndDate: { type: Type.STRING, description: '기간 마지막 날 YYYY-MM-DD, 없으면 빈 문자열' },
-          eventLabel: { type: Type.STRING, description: '날짜 의미 2~6글자, 없으면 빈 문자열' },
-          eventLocation: { type: Type.STRING, description: '원문에 적힌 행사 장소 이름, 없으면 빈 문자열' },
-        },
-        required: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
-        propertyOrdering: ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation'],
-      },
-    },
+    config: { systemInstruction: instruction, temperature, responseMimeType: 'application/json', responseSchema },
   });
-
-  // 1) 모델이 종료됐으면 안내된 후속 모델로 전환
-  // 2) 일시적 혼잡(503·429 등)이면 잠시 기다렸다 재시도, 계속 혼잡하면 다른 flash 모델로 전환
   const tried = new Set();
   const queue = [activeModel, ...FALLBACK_MODELS.filter((m) => m !== activeModel)];
   let response;
@@ -234,8 +252,67 @@ export async function writeWithGemini({ apiKey, categories, sourceText, hintTitl
   }
   if (!response) throw lastError ?? new Error('AI 응답을 받지 못했습니다');
   const raw = typeof response.text === 'string' ? response.text : '';
-  const data = JSON.parse(raw);
-  for (const key of ['cleanTitle', 'urlSlug', 'summary', 'category', 'markdownBody']) {
+  return JSON.parse(raw);
+}
+
+// ---------------------------------------------------------------------------
+// 외부 행사 후보 정리·광고성 1차 판정 (🔎 외부 행사 후보 검토)
+// 최종 공개 여부는 항상 운영진이 정합니다. AI는 정리와 '광고성 의심' 표시만 합니다.
+// ---------------------------------------------------------------------------
+const EVENT_INSTRUCTION = `당신은 서울 구로구 신도림동 지역 커뮤니티 '신도림 커뮤니티(신커)'의 외부 행사 소식 편집자입니다.
+신도림은 지하철 1·2호선이 만나는 교통의 요지라, 회원들은 서울·수도권은 물론 전국의 축제·공연·전시·팝업스토어·공공기관 체험 프로그램에도 다녀옵니다.
+운영진이 공식 공개 자료나 제보에서 가져온 행사 정보를, 회원들이 미리 보고 갈지 말지 스스로 고를 수 있도록 짧고 정확하게 정리합니다.
+
+[사실 창작 금지]
+- 입력에 적힌 사실만 쓰세요. 날짜·시간·장소·요금·신청 방법·주최를 추측하거나 지어내지 마세요. 모르면 빈 문자열로 두세요.
+- 홍보 문구, 과장, 원문에 없는 평가("꼭 가 보세요", "역대급")를 쓰지 마세요. 정중한 존댓말 기사체로 쓰세요.
+- 개인 연락처·개인 SNS·오픈채팅 링크는 쓰지 마세요.
+
+[광고성 판정 — 운영진 검토를 돕는 참고 표시]
+- adRisk는 "낮음", "보통", "높음" 중 하나입니다.
+- "높음": 특정 업체의 상품 판매·가입·상담 유도가 목적인 글(분양·보험·대출·투자·학원 상담, 회원가입·앱 설치 조건의 경품, 유료 클래스 모객, 체험단을 빙자한 리뷰 마케팅 등).
+- "보통": 브랜드 팝업스토어·백화점 이벤트처럼 상업적이지만 누구나 구경·참여할 수 있는 행사.
+- "낮음": 공공기관·지자체·문화재단·비영리 단체가 여는 축제·공연·전시·체험·교육.
+- adReason에는 그렇게 판단한 근거를 한 문장으로 쓰세요.`;
+
+/**
+ * @returns {Promise<{title:string,summary:string,body:string,eventDate:string,eventEndDate:string,eventLabel:string,eventLocation:string,organizer:string,feeInfo:string,adRisk:string,adReason:string}>}
+ */
+export async function screenEventWithGemini({ apiKey, sourceText, today }) {
+  const { GoogleGenAI, Type } = await import('@google/genai');
+  const ai = new GoogleGenAI({ apiKey });
+  const S = (description) => ({ type: Type.STRING, description });
+  const keys = ['title', 'summary', 'body', 'eventDate', 'eventEndDate', 'eventLabel', 'eventLocation', 'organizer', 'feeInfo', 'adRisk', 'adReason'];
+  const data = await generateJson({
+    ai,
+    systemInstruction: EVENT_INSTRUCTION,
+    userText: [
+      `오늘 날짜: ${today || kstDateString()} (원문에 연도가 없으면 오늘 이후 가장 가까운 해로 보세요)`,
+      '다음 외부 행사 정보를 규칙에 따라 JSON으로 정리하세요.',
+      '----- 원문 시작 -----',
+      sourceText,
+      '----- 원문 끝 -----',
+    ].join('\n'),
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        title: S('행사 이름이 드러나는 40자 안팎의 한국어 제목 (예: 광화문 빵축제 2026 — 11월 28~30일 광화문광장)'),
+        summary: S('원문 사실만 담은 정확히 3문장 요약: 무엇을·언제·어디서, 누구나 참여 가능한지와 요금, 신청 방법'),
+        body: S('마크다운 본문. ## 소제목과 목록으로 일정·장소·요금·신청 방법·주최를 정리. 첫 줄에 # 제목 금지'),
+        eventDate: S('시작일 YYYY-MM-DD (모집·신청이 핵심이면 접수 마감일), 모르면 빈 문자열'),
+        eventEndDate: S('마지막 날 YYYY-MM-DD, 하루짜리거나 모르면 빈 문자열'),
+        eventLabel: S('날짜 의미 2~6글자: 행사 기간, 행사일, 공연일, 접수 마감, 운영 기간 등'),
+        eventLocation: S('원문에 적힌 장소 이름 그대로 (예: 광화문광장), 모르면 빈 문자열'),
+        organizer: S('원문에 적힌 주최·주관 이름, 모르면 빈 문자열'),
+        feeInfo: S('원문에 적힌 요금 (예: 무료, 성인 15,000원), 모르면 빈 문자열'),
+        adRisk: { type: Type.STRING, enum: ['낮음', '보통', '높음'], description: '광고성 위험도' },
+        adReason: S('광고성 판단 근거 한 문장'),
+      },
+      required: keys,
+      propertyOrdering: keys,
+    },
+  });
+  for (const key of ['title', 'summary', 'body']) {
     if (typeof data[key] !== 'string' || !data[key].trim()) throw new Error(`AI 응답에 ${key}가 비어 있습니다`);
   }
   return data;

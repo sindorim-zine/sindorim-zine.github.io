@@ -98,6 +98,106 @@ content:
         description: 저장 후 1~2분이면 이 항목은 목록에서 사라지고 사이트에 글이 올라갑니다. 문제가 생기면 여기에 이유가 표시됩니다.
 
   # ───────────────────────────────────────────────────────────
+  # 0-1. 🔎 외부 행사 후보 검토 · 제보
+  #    매일 아침 공공 API(서울시 문화행사·전국 축제·공연·공공 체험 예약)에서 다가오는 행사를
+  #    자동으로 모아 '검토 대기'로 쌓고, 운영진도 팝업스토어·브랜드 행사를 제보할 수 있습니다.
+  #    AI가 정리와 광고성 의심 표시를 하지만, 공개 여부는 운영진이 정합니다.
+  #    (scripts/process-candidates.mjs)
+  # ───────────────────────────────────────────────────────────
+  - name: candidates
+    label: 🔎 외부 행사 후보 검토 · 제보 (공개 여부는 운영진이 결정)
+    type: collection
+    path: src/candidates
+    format: yaml-frontmatter
+    exclude: [.gitkeep, _seen.json]
+    filename:
+      template: "{year}{month}{day}-tip-{hour}{minute}{second}.md"
+      field: false
+    view:
+      fields: [decision, title, eventDate, aiCheck]
+      primary: title
+      search: [title, summary, organizer]
+      default:
+        sort: eventDate
+        order: asc
+    fields:
+      - name: decision
+        label: ① 운영진 판단 (가장 중요)
+        type: select
+        default: pending
+        description: "'✅ 공개'로 저장하면 1~2분 뒤 '가볼 만한 행사'에 외부 행사 표시와 함께 올라갑니다. 광고성이거나 회원들께 도움이 안 되면 '🚫 제외'로 저장하세요(같은 행사는 다시 수집되지 않습니다). 행사가 끝난 후보는 자동으로 정리됩니다."
+        options:
+          values:
+            - name: pending
+              label: ⏳ 검토 대기
+            - name: publish
+              label: ✅ 공개 (회원들께 미리 알림)
+            - name: reject
+              label: 🚫 제외 (광고성·관심 밖)
+      - name: aiCheck
+        label: AI 광고성 참고 표시 (자동)
+        type: string
+        readonly: true
+        description: "🟢 낮음(공공·비영리 행사) · 🟡 보통(브랜드 팝업 등 상업적이지만 누구나 참여) · 🔴 높음(판매·가입·상담 유도). 참고용이며 최종 판단은 운영진이 합니다."
+      - name: originalUrl
+        label: ② 공식 안내 주소 (제보할 때 필수)
+        type: string
+        description: "주최 측 공식 페이지·공고 주소. 상세 페이지의 '공식 안내 보기' 버튼으로 연결됩니다. 개인 블로그·SNS 후기보다는 공식 주소를 넣어 주세요."
+      - name: body
+        label: ③ 안내 내용 (제보할 때는 공식 안내문을 붙여 넣기)
+        type: text
+        description: "제보할 때는 공식 안내문(일정·장소·요금·신청 방법)을 복사해 붙여 넣고 '⏳ 검토 대기'로 저장하세요. 1~2분 뒤 AI가 제목·요약·일정을 정리해 둡니다. 확인 후 '✅ 공개'로 바꿔 저장하면 올라갑니다."
+      - name: title
+        label: 제목 (비워 두면 AI가 채움)
+        type: string
+      - name: summary
+        label: 3줄 요약 (비워 두면 AI가 채움)
+        type: text
+      - name: eventDate
+        label: 📅 시작일 (모집이면 접수 마감일)
+        type: date
+        options:
+          format: yyyy-MM-dd
+      - name: eventEndDate
+        label: 📅 종료일 (기간이 있을 때만)
+        type: date
+        options:
+          format: yyyy-MM-dd
+      - name: eventLabel
+        label: 날짜 이름 (예 행사 기간, 공연일, 접수 마감)
+        type: string
+      - name: eventLocation
+        label: 📍 장소 (예 광화문광장)
+        type: string
+      - name: organizer
+        label: 주최·주관
+        type: string
+      - name: feeInfo
+        label: 요금 (예 무료, 성인 15,000원)
+        type: string
+      - name: sourceName
+        label: 정보 출처
+        type: string
+        default: 운영진 제보
+      - name: thumbnail
+        label: 대표 사진 (선택 — 저작권 걱정 없는 사진만)
+        type: image
+        description: 주최 측 포스터는 허락 없이 쓰면 저작권 문제가 될 수 있습니다. 비워 두면 기본 일러스트가 나옵니다.
+      - name: aiStatus
+        label: 처리 상태 (자동 표시)
+        type: string
+        readonly: true
+      - name: sourceId
+        type: string
+        hidden: true
+      - name: collectedAt
+        type: string
+        hidden: true
+      - name: aiDone
+        type: boolean
+        hidden: true
+
+  # ───────────────────────────────────────────────────────────
   # 1. 발행된 글 관리 (수정·고정·비공개 전환, 직접 작성)
   # ───────────────────────────────────────────────────────────
   - name: posts
@@ -139,7 +239,7 @@ content:
         required: true
         default: 공지사항
         options:
-          values: [공지사항, 모임·행사, 봉사·기부, 동네 소식, 생활 정보, 맛집·카페]
+          values: [공지사항, 모임·행사, 봉사·기부, 동네 소식, 생활 정보, 맛집·카페, 가볼 만한 행사]
       - name: summary
         label: 3줄 요약
         type: text
@@ -180,6 +280,20 @@ content:
         type: string
       - name: eventLocation
         label: 📍 행사 장소 (선택 — 원문에 적힌 장소만, 예 도림천 신도림교 아래)
+        type: string
+      - name: external
+        label: 외부 행사 소식 (신커 주최 아님)
+        type: boolean
+        default: false
+        description: 켜면 '외부 행사 · 신커 주최 아님' 표시와 '참여는 각자 선택' 안내가 붙고, 하단 버튼이 공식 안내로 연결됩니다. 🔎 외부 행사 후보 검토에서 공개한 글은 자동으로 켜집니다.
+      - name: organizer
+        label: 외부 행사 주최·주관
+        type: string
+      - name: feeInfo
+        label: 외부 행사 요금
+        type: string
+      - name: sourceName
+        label: 외부 행사 정보 출처
         type: string
       - name: body
         label: 본문

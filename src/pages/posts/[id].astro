@@ -18,7 +18,11 @@ interface Props {
 }
 const { post } = Astro.props;
 const { Content } = await render(post);
-const { title, summary, category, pubDate, originalUrl, pinned } = post.data;
+const { title, summary, category, pubDate, originalUrl, pinned, external } = post.data;
+const organizer = (post.data.organizer ?? '').trim();
+const sourceName = (post.data.sourceName ?? '').trim();
+const feeInfo = (post.data.feeInfo ?? '').trim();
+const officialUrl = external && isHttpUrl(originalUrl) ? originalUrl : '';
 const thumb = thumbnailOf(post);
 const thumbInBody = !!thumb && (post.body ?? '').includes(thumb);
 const event = eventOf(post);
@@ -55,6 +59,7 @@ const jsonLd = [
       <div class="flex flex-wrap items-center gap-1.5">
         {pinned && <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>}
         <span class="chip" data-pagefind-filter="카테고리">{category}</span>
+        {external && <span class="chip chip-external">외부 행사 · 신커 주최 아님</span>}
       </div>
       <h1 class="mt-4 text-[1.85rem] font-bold leading-snug sm:text-4xl">{title}</h1>
       <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
@@ -66,6 +71,15 @@ const jsonLd = [
         <div class="event-box mt-5">
           <EventBadge event={event} size="lg" />
         </div>
+      )}
+      {external && (
+        <dl class="mt-5 grid gap-1.5 rounded-[var(--radius-card)] border border-dashed border-line p-4 text-sm">
+          {organizer && <div class="flex gap-2"><dt class="w-14 shrink-0 text-muted">주최</dt><dd>{organizer}</dd></div>}
+          {event?.location && <div class="flex gap-2"><dt class="w-14 shrink-0 text-muted">장소</dt><dd>{event.location}</dd></div>}
+          {feeInfo && <div class="flex gap-2"><dt class="w-14 shrink-0 text-muted">요금</dt><dd>{feeInfo}</dd></div>}
+          {sourceName && <div class="flex gap-2"><dt class="w-14 shrink-0 text-muted">정보 출처</dt><dd>{sourceName}</dd></div>}
+          <p class="mt-1 text-muted">신도림 커뮤니티가 주최하는 행사가 아니라, 회원들께 미리 알려 드리는 외부 소식입니다. 참여는 각자 선택이며, 일정·요금·신청 방법은 바뀔 수 있으니 공식 안내에서 꼭 확인해 주세요.</p>
+        </dl>
       )}
     </header>
 
@@ -108,6 +122,25 @@ const jsonLd = [
   <section class="container-prose mt-12" aria-label="네이버 카페에서 이어가기">
     <div class="card flex flex-col items-center gap-4 p-8 text-center">
       <span class="grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent"><Icon name="chat" size={22} /></span>
+      {external ? (
+        <>
+          <p class="font-heading text-xl font-bold">다녀오셨다면 카페에 후기를 나눠 주세요</p>
+          <p class="max-w-md text-sm text-muted">정확한 일정과 신청 방법은 공식 안내에서 확인하고, 다녀온 이야기는 네이버 카페에서 이웃과 함께 나눠요.</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            {officialUrl && (
+              <a href={officialUrl} target="_blank" rel="noopener noreferrer nofollow" class="btn btn-primary">
+                공식 안내 보기 <Icon name="external" size={15} />
+              </a>
+            )}
+            {siteConfig.cafeUrl && (
+              <a href={siteConfig.cafeUrl} target="_blank" rel="noopener noreferrer" class={officialUrl ? 'btn btn-ghost' : 'btn btn-primary'}>
+                네이버 카페에 후기 남기기 <Icon name="external" size={15} />
+              </a>
+            )}
+          </div>
+        </>
+      ) : (
+      <>
       <p class="font-heading text-xl font-bold">이 소식에 대한 이야기는 카페에서 나눠요</p>
       <p class="max-w-md text-sm text-muted">댓글, 참여 신청, 자세한 일정은 네이버 카페 원문에서 확인하고 함께할 수 있습니다.</p>
       {sourceUrl ? (
@@ -116,6 +149,8 @@ const jsonLd = [
         </a>
       ) : (
         <a href={withBase('/about')} class="btn btn-ghost">커뮤니티 소개 보기</a>
+      )}
+      </>
       )}
     </div>
     {/* 행사 포스터·전단지·현장 안내용: 이 글로 바로 오는 QR (펼칠 때만 이미지를 불러옵니다) */}

@@ -53,19 +53,29 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GEMINIAPI_KEY }}
         run: node scripts/process-inbox.mjs
 
+      # ── 🔎 외부 행사 후보: 운영진 판단(공개·제외) 반영 + AI 정리. 매일 아침(예약 실행)·수동 실행 때는 공공 API에서 새 후보 수집 ──
+      #    키가 없는 출처는 건너뜁니다. SEOUL_API_KEY(서울 열린데이터광장) · TOUR_API_KEY(공공데이터포털) · KOPIS_API_KEY(KOPIS)
+      - name: 외부 행사 후보 처리 (검토 반영 · 자동 수집)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GEMINIAPI_KEY }}
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+          TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
+          KOPIS_API_KEY: ${{ secrets.KOPIS_API_KEY }}
+        run: node scripts/process-candidates.mjs ${{ github.event_name != 'push' && '--collect' || '' }}
+
       # ── 사진 자동 압축: CMS로 직접 올린 사진까지 폭 1600px·JPEG/WebP로 줄이고 경로를 고침 ──
       - name: 사진 자동 압축
         run: node scripts/optimize-images.mjs
 
       - name: 정리된 글·압축한 사진 커밋 & 푸시
         run: |
-          git add -A src/content/posts src/inbox src/data public/images/uploads
+          git add -A src/content/posts src/inbox src/candidates src/data public/images/uploads
           if git diff --cached --quiet; then
             echo "새로 정리된 글이나 압축할 사진이 없습니다."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(inbox): 카페 글 AI 정리·사진 압축"
+            git commit -m "chore(inbox): 카페 글 AI 정리·외부 행사 후보·사진 압축"
             # 기본 GITHUB_TOKEN으로 푸시하므로 이 푸시는 워크플로를 다시 실행하지 않습니다(무한 루프 방지).
             # 그사이 CMS 저장 등으로 원격이 바뀌었으면 합쳐서 올리고, 충돌하면 깨끗이 되돌린 뒤 다음 실행에 맡깁니다.
             if ! git pull --rebase --autostash origin main; then
