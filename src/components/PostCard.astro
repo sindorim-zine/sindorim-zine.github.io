@@ -2,7 +2,7 @@
 import Illustration from './Illustration.astro';
 import Icon from './Icon.astro';
 import EventBadge from './EventBadge.astro';
-import { eventOf, formatDate, illustrationFor, publishedTime, thumbnailOf, type Post } from '../utils/site';
+import { cardThumb, eventOf, formatDate, illustrationFor, publishedTime, thumbnailOf, type Post } from '../utils/site';
 import { postPath, withBase } from '../utils/url';
 
 interface Props {
@@ -28,7 +28,9 @@ const event = eventOf(post);
     <div class="feed-media">
       {thumb ? (
         <img
-          src={withBase(thumb)}
+          src={withBase(cardThumb(thumb))}
+          data-fallback={withBase(thumb)}
+          onerror="if(this.dataset.fallback&&this.src.indexOf(this.dataset.fallback)<0){this.src=this.dataset.fallback}"
           alt={`${title} 대표 사진`}
           width="400"
           height="500"

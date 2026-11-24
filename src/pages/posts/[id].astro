@@ -61,7 +61,7 @@ const jsonLd = [
         <span class="chip" data-pagefind-filter="카테고리">{category}</span>
         {external && <span class="chip chip-external">외부 행사 · 신커 주최 아님</span>}
       </div>
-      <h1 class="mt-4 text-[1.85rem] font-bold leading-snug sm:text-4xl">{title}</h1>
+      <h1 class="title-readable mt-4 text-[1.7rem] leading-snug sm:text-[2.1rem]">{title}</h1>
       <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
         <span class="inline-flex items-center gap-1"><Icon name="calendar" size={14} /><time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></span>
         <span aria-hidden="true">·</span>

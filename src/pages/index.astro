@@ -5,7 +5,7 @@ import PostCard from '../components/PostCard.astro';
 import Icon from '../components/Icon.astro';
 import Illustration from '../components/Illustration.astro';
 import EventBadge from '../components/EventBadge.astro';
-import { SORT_OPTIONS, collectCategories, eventOf, formatDate, getPublishedPosts, illustrationFor, siteConfig, sortPosts, thumbnailOf } from '../utils/site';
+import { SORT_OPTIONS, cardThumb, collectCategories, eventOf, formatDate, formatEvent, getPublishedPosts, illustrationFor, siteConfig, sortPosts, thumbnailOf, upcomingExternal } from '../utils/site';
 import { organizationSchema, websiteSchema } from '../utils/schema';
 import { postPath, withBase } from '../utils/url';
 
@@ -16,8 +16,13 @@ const PAGE_SIZE = Number(process.env.FEED_PAGE_SIZE) > 0 ? Number(process.env.FE
 const { defaultViewMode, defaultSort } = siteConfig.design;
 const posts = await getPublishedPosts();
 const pinned = posts.filter((p) => p.data.pinned);
+// 외부 행사 소식(신커 주최 아님)은 메인 피드에 섞지 않고, 위쪽 '가볼 만한 행사' 짧은 목록으로 따로 보여 줍니다.
+// 사이트는 매일 아침 다시 만들어지므로, 끝난 행사는 다음 날 목록에서 자동으로 빠집니다(글 자체는 '전체 글'에 남음).
+const EXTERNAL_LIMIT = 6;
+const externalUpcoming = upcomingExternal(posts);
+const externalShown = externalUpcoming.slice(0, EXTERNAL_LIMIT);
 // 운영자가 정한 기본 정렬로 미리 정렬해 둡니다(방문자가 바꾸면 화면에서 다시 정렬).
-const feed = sortPosts(posts.filter((p) => !p.data.pinned), defaultSort);
+const feed = sortPosts(posts.filter((p) => !p.data.pinned && !p.data.external), defaultSort);
 const firstPage = feed.slice(0, PAGE_SIZE);
 const categories = collectCategories(feed);
 const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
@@ -41,7 +46,7 @@ const feedUrl = withBase('/feed.json');
               <a href={withBase(postPath(post.id))} class="card group flex items-stretch gap-4 overflow-hidden p-3 transition hover:-translate-y-0.5">
                 <div class="aspect-square w-24 shrink-0 overflow-hidden rounded-[calc(var(--radius-card)*0.7)] sm:w-28">
                   {thumb ? (
-                    <img src={withBase(thumb)} alt={`${post.data.title} 대표 사진`} width="112" height="112" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    <img src={withBase(cardThumb(thumb))} data-fallback={withBase(thumb)} onerror="if(this.dataset.fallback&&this.src.indexOf(this.dataset.fallback)<0){this.src=this.dataset.fallback}" alt={`${post.data.title} 대표 사진`} width="112" height="112" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <Illustration variant={illustrationFor(post.data.category)} class="h-full w-full" />
                   )}
@@ -51,13 +56,52 @@ const feedUrl = withBase('/feed.json');
                     <span class="chip chip-pinned"><Icon name="pin" size={12} />중요 안내</span>
                     <span class="chip">{post.data.category}</span>
                   </div>
-                  <h3 class="font-heading text-[1.05rem] font-bold leading-snug group-hover:text-accent">{post.data.title}</h3>
+                  <h3 class="title-readable text-[1.05rem] font-bold leading-snug group-hover:text-accent">{post.data.title}</h3>
                   {eventOf(post) ? (
                     <EventBadge event={eventOf(post)!} />
                   ) : (
                     <time class="text-xs text-muted" datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
                   )}
                 </div>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+
+  {externalShown.length > 0 && (
+    <section class="container-page mt-12" aria-labelledby="external-title">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 id="external-title" class="section-title"><span aria-hidden="true">🧭</span> 가볼 만한 행사</h2>
+          <p class="mt-1 text-sm text-muted">신도림에서 다녀오기 좋은 외부 행사 소식이에요. 신커 주최가 아니며, 참여는 각자 선택입니다.</p>
+        </div>
+        {externalUpcoming.length > externalShown.length && (
+          <a href={withBase('/archive/')} class="text-sm font-semibold text-muted hover:text-ink">더 보기 ({externalUpcoming.length - externalShown.length}개) →</a>
+        )}
+      </div>
+      <ul class="external-list card divide-y divide-[var(--border-color)]">
+        {externalShown.map((post) => {
+          const event = eventOf(post);
+          const meta = [event?.location, (post.data.feeInfo ?? '').trim()].filter(Boolean).join(' · ');
+          return (
+            <li>
+              <a href={withBase(postPath(post.id))} class="group flex items-start gap-3 px-4 py-3.5 transition hover:bg-[var(--bg-subtle)] sm:items-center sm:px-5">
+                {event && (
+                  <span class="external-date shrink-0" aria-hidden="true">
+                    <span class="block text-[0.7rem] font-semibold">{Number(event.start.slice(5, 7))}월</span>
+                    <span class="block text-lg font-bold leading-none">{Number(event.start.slice(8, 10))}</span>
+                  </span>
+                )}
+                <span class="min-w-0 flex-1">
+                  <span class="title-readable block truncate text-[0.98rem] group-hover:text-accent">{post.data.title}</span>
+                  <span class="mt-0.5 block truncate text-xs text-muted">
+                    {event && <span>{formatEvent(event)}</span>}{event && meta && ' · '}{meta}
+                  </span>
+                </span>
+                <Icon name="arrow-right" size={15} class="mt-1 shrink-0 text-muted sm:mt-0" />
               </a>
             </li>
           );

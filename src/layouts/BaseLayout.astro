@@ -38,7 +38,8 @@ const headingDef: FontDef = HEADING_FONT_DEFS[headingFont];
 const bodyDef: FontDef = BODY_FONT_DEFS[bodyFont];
 const fontCss = fontStylesheets(headingFont, bodyFont);
 const fontVars = `--font-heading:${headingDef.stack};--font-body:${bodyDef.stack};--heading-weight:${headingDef.singleWeight ? 400 : 700};${headingDef.sizeAdjust ? `--heading-size-adjust:${headingDef.sizeAdjust};` : ''}`;
-const pageTitle = title ? `${title} | ${siteConfig.siteTitle}` : siteConfig.siteTitle;
+// 제목이 없는 페이지(메인 화면)는 검색 결과용 메인 제목을 씁니다. 예) 신도림 커뮤니티 (신커) — 신도림 봉사·기부·동네 소식
+const pageTitle = title ? `${title} | ${siteConfig.siteTitle}` : siteConfig.homeTitle || siteConfig.siteTitle;
 const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
 // 검색 결과 설명은 150자 안팎에서 문장 단위로 자릅니다(구글은 약 155자 이후를 잘라 표시).
 const metaDescription = (() => {
@@ -81,13 +82,13 @@ const viewStorageKey = `sindorim-view-pref-${defaultViewMode}`;
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={siteConfig.siteTitle} />
     <meta property="og:locale" content="ko_KR" />
-    <meta property="og:title" content={title ?? siteConfig.siteTitle} />
+    <meta property="og:title" content={title ?? (siteConfig.homeTitle || siteConfig.siteTitle)} />
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     {publishedTime && <meta property="article:published_time" content={publishedTime} />}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title ?? siteConfig.siteTitle} />
+    <meta name="twitter:title" content={title ?? (siteConfig.homeTitle || siteConfig.siteTitle)} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 

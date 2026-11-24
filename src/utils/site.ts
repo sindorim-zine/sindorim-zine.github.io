@@ -59,6 +59,8 @@ const rawBanner = (raw.eventBanner ?? {}) as Record<string, unknown>;
 export const siteConfig = {
   siteTitle: text(raw.siteTitle, '신도림 커뮤니티'),
   siteDescription: text(raw.siteDescription),
+  // 검색 결과에 보이는 메인 화면 제목. 비어 있으면 사이트 이름만 씁니다.
+  homeTitle: text(raw.homeTitle).trim(),
   representativeName: text(raw.representativeName, '신도림 커뮤니티 운영진') || '신도림 커뮤니티 운영진',
   cafeUrl: isHttpUrl(raw.cafeUrl) ? (raw.cafeUrl as string) : '',
   indexNowKey: text(raw.indexNowKey),
@@ -302,6 +304,24 @@ export function isoDate(date: Date): string {
 export function thumbnailOf(post: Post): string | null {
   const value = (post.data.thumbnail ?? '').trim();
   return value ? value : null;
+}
+
+/** 카드·목록용 작은 사진(가로 600px). 빌드 후처리(scripts/postbuild.mjs)가 올린 사진마다 '이름.w600.webp'를 만듭니다. */
+export const CARD_THUMB_RE = /^(\/images\/uploads\/.+)\.(jpe?g|png|webp)$/i;
+export function cardThumb(src: string): string {
+  const m = CARD_THUMB_RE.exec(src);
+  return m ? `${m[1]}.w600.webp` : src;
+}
+
+/** 아직 끝나지 않은 외부 행사 소식 (가까운 날짜순) — 메인 화면 '가볼 만한 행사' 목록 */
+export function upcomingExternal(posts: Post[], today = todayKst()): Post[] {
+  return posts
+    .filter((p) => p.data.external && !p.data.pinned)
+    .filter((p) => {
+      const e = eventOf(p);
+      return !e || e.end >= today;
+    })
+    .sort((a, b) => (eventOf(a)?.start ?? '9999').localeCompare(eventOf(b)?.start ?? '9999') || compareNewest(a, b));
 }
 
 export type IllustrationVariant = 'notice' | 'meetup' | 'local' | 'life' | 'food' | 'volunteer';

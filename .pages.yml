@@ -474,6 +474,10 @@ content:
         label: 사이트 이름
         type: string
         required: true
+      - name: homeTitle
+        label: 검색 결과에 보이는 메인 화면 제목
+        type: string
+        description: "구글·네이버·Bing 검색 결과의 제목 줄에 나옵니다. 무엇을 하는 곳인지 한눈에 보이게 40자 안팎으로. 예) 신도림 커뮤니티 (신커) — 신도림 봉사·기부·동네 소식"
       - name: siteDescription
         label: 사이트 설명 (검색 결과에 표시)
         type: text
@@ -487,6 +491,7 @@ content:
       - name: heroSubtitle
         label: 메인 배너 부제목
         type: text
+        description: 메인 화면 첫 줄이라 2~3문장(100자 안팎)으로 짧게 써 주세요. 긴 소개는 '🏡 커뮤니티 소개 페이지'에 넣으면 됩니다.
       - name: heroImage
         label: 메인 배너 이미지
         type: image
