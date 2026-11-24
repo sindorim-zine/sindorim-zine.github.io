@@ -58,6 +58,7 @@ const jsonLd = [
   markdownPath={postMarkdownPath(post.id)}
   publishedTime={pubDate.toISOString()}
   jsonLd={jsonLd}
+  noindex={external}
 >
   <article class="pb-4 pt-10 md:pt-16" data-pagefind-body>
     <header class="container-prose">
@@ -110,7 +111,7 @@ const jsonLd = [
       <aside class="container-prose mt-8" aria-labelledby="ai-summary-title">
         <div class="rounded-[var(--radius-card)] border border-line bg-accent-soft/60 p-5 sm:p-6">
           <p id="ai-summary-title" class="mb-3 flex items-center gap-1.5 text-sm font-bold text-accent">
-            <Icon name="sparkle" size={16} /> AI 핵심 3줄 요약
+            <Icon name="sparkle" size={16} /> 핵심 3줄 요약
           </p>
           <ul class="space-y-2">
             {summaryLines.map((line) => (

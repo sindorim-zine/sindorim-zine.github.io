@@ -130,6 +130,12 @@ function aboutDetailMarkdown(level: 2 | 3): string[] {
     }
     lines.push('');
   }
+  if (about.press.length) {
+    lines.push(`${h} ${about.pressTitle}`, '');
+    if (about.pressIntro) lines.push(about.pressIntro, '');
+    for (const p of about.press) lines.push(`- ${p.date} ${p.outlet}: [${oneLine(p.title)}](${p.url})`);
+    lines.push('');
+  }
   return lines;
 }
 

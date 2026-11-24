@@ -123,7 +123,13 @@ export type AboutData = {
   awardsTitle: string;
   awardsIntro: string;
   awards: AboutAward[];
+  pressTitle: string;
+  pressIntro: string;
+  /** 언론 보도 (최신순). 외부 언론이 다룬 기록은 검색엔진·AI에 '실제 단체'라는 강한 근거가 됩니다. */
+  press: AboutPress[];
 };
+
+export type AboutPress = { date: string; outlet: string; title: string; url: string };
 
 export type AboutAward = {
   /** 화면에 보이는 날짜 그대로 (예: '2015. 12. 05.' 또는 '2020년') */
@@ -170,6 +176,12 @@ export const about: AboutData = {
       return { date, title: str(a.title), issuer: str(a.issuer), upcoming: !!day && day > todayKst() };
     })
     .filter((a) => a.date && a.title),
+  pressTitle: str(rawAbout.pressTitle) || '언론에 소개된 신커',
+  pressIntro: str(rawAbout.pressIntro),
+  press: list<Record<string, unknown>>(rawAbout.press)
+    .map((p) => ({ date: awardDay(str(p.date)) || str(p.date), outlet: str(p.outlet), title: str(p.title), url: str(p.url) }))
+    .filter((p) => p.title && p.outlet && isHttpUrl(p.url))
+    .sort((a, b) => b.date.localeCompare(a.date)),
 };
 
 /** 본문 텍스트를 빈 줄 기준 문단 배열로 */

@@ -159,6 +159,34 @@
       "issuer": "구로구청장"
     }
   ],
+  "pressTitle": "언론에 소개된 신커",
+  "pressIntro": "지역 언론과 일간지가 전한 신커와 신커봉사단의 이야기입니다.",
+  "press": [
+    {
+      "date": "2026-05-02",
+      "outlet": "여성신문",
+      "title": "신도림 커뮤니티 ‘신커봉사단’, “어르신 위한 카네이션 키트 만들어 기부합니다”",
+      "url": "https://www.womennews.co.kr/news/articleView.html?idxno=277022"
+    },
+    {
+      "date": "2021-05-21",
+      "outlet": "구로타임즈",
+      "title": "[포커스] 신도림커뮤니티 - “동네 사는 맛 나네요” 온라인 사랑방의 진화",
+      "url": "https://www.kurotimes.com/news/articleView.html?idxno=201763"
+    },
+    {
+      "date": "2015-06-29",
+      "outlet": "구로타임즈",
+      "title": "[포커스 417] 신도림커뮤니티 ‘신화창조’",
+      "url": "https://www.kurotimes.com/news/articleView.html?idxno=19150"
+    },
+    {
+      "date": "2013-01-14",
+      "outlet": "구로타임즈",
+      "title": "[포커스 306] 신도림커뮤니티 소모임 ‘책커’",
+      "url": "https://www.kurotimes.com/news/articleView.html?idxno=15016"
+    }
+  ],
   "milestones": [
     {
       "period": "2008년",

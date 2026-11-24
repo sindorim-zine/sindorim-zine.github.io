@@ -306,6 +306,36 @@ content:
           - name: issuer
             label: 수여 기관
             type: string
+      - name: pressTitle
+        label: 언론 보도 섹션 제목
+        type: string
+        default: 언론에 소개된 신커
+      - name: pressIntro
+        label: 언론 보도 머리말
+        type: string
+      - name: press
+        label: 언론 보도 (최신순으로 자동 정렬)
+        type: object
+        description: 신문·방송·인터넷 언론이 신커를 다룬 기사. 외부 언론이 소개했다는 기록은 검색엔진과 AI가 '실제로 활동하는 단체'로 믿는 가장 강한 근거입니다. 블로그·SNS 글은 넣지 마세요.
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{date} · {outlet} · {title}"
+        fields:
+          - name: date
+            label: 보도 날짜
+            type: date
+            options:
+              format: yyyy-MM-dd
+          - name: outlet
+            label: 언론사 (예 구로타임즈)
+            type: string
+          - name: title
+            label: 기사 제목
+            type: string
+          - name: url
+            label: 기사 주소 (https://로 시작)
+            type: string
       - name: milestones
         label: 주요 연혁
         type: object

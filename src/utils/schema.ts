@@ -35,6 +35,18 @@ export function organizationSchema(site: Site) {
         }
       : {}),
     ...(about.foundingYear ? { foundingDate: about.foundingYear } : {}),
+    // 외부 언론 보도: 실제로 활동하는 단체라는 근거 (subjectOf)
+    ...(about.press.length
+      ? {
+          subjectOf: about.press.map((p) => ({
+            '@type': 'NewsArticle',
+            headline: p.title,
+            url: p.url,
+            ...(/^\d{4}-\d{2}-\d{2}$/.test(p.date) ? { datePublished: p.date } : {}),
+            publisher: { '@type': 'Organization', name: p.outlet },
+          })),
+        }
+      : {}),
     url: absoluteUrl('/', site),
     description: siteConfig.siteDescription,
     logo: absoluteUrl('/favicon.svg', site),

@@ -67,7 +67,8 @@ function changedPostPaths() {
         try {
           const content = readFileSync(path.join(ROOT, f), 'utf8');
           const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content)?.[1] ?? '';
-          return !/^draft\s*:\s*true\s*$/m.test(frontmatter);
+          // 외부 행사 소식(external: true)은 검색 제외(noindex) 글이라 알리지 않습니다.
+          return !/^draft\s*:\s*true\s*$/m.test(frontmatter) && !/^external\s*:\s*true\s*$/m.test(frontmatter);
         } catch {
           return false;
         }

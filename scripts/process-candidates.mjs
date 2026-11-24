@@ -39,7 +39,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CANDIDATE_DIR = path.join(ROOT, 'src/candidates');
 const SEEN_FILE = path.join(CANDIDATE_DIR, '_seen.json');
 const POSTS_DIR = path.join(ROOT, 'src/content/posts');
-const NEW_URLS_FILE = path.join(ROOT, '.cache/new-urls.json');
 const MAX_AI_PER_RUN = 12;
 const MAX_PENDING = 40; // 검토 대기 후보가 이보다 많으면 자동 수집을 쉬어 운영진 부담을 줄입니다.
 const SEEN_KEEP_DAYS = 400;
@@ -257,7 +256,6 @@ async function collect(seen, apiKeyForAi) {
 
 async function main() {
   await mkdir(CANDIDATE_DIR, { recursive: true });
-  await mkdir(path.dirname(NEW_URLS_FILE), { recursive: true });
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
   const useAi = apiKey.length >= 20;
   const seen = await loadSeen();
@@ -348,13 +346,7 @@ async function main() {
   }
 
   await saveSeen(seen);
-  if (newPaths.length) {
-    let existing = [];
-    try {
-      existing = JSON.parse(await readFile(NEW_URLS_FILE, 'utf8'));
-    } catch {}
-    await writeFile(NEW_URLS_FILE, JSON.stringify([...(Array.isArray(existing) ? existing : []), ...newPaths], null, 2));
-  }
+  // 외부 행사 글은 검색 제외(noindex)라 IndexNow로 검색엔진에 알리지 않습니다(.cache/new-urls.json에 넣지 않음).
   log(`완료: 공개 ${newPaths.length}건, AI 정리 ${aiCalls}건`);
 }
 

@@ -6,9 +6,13 @@ import { resolveSiteAndBase } from './scripts/site-url.mjs';
 import { satteri } from '@astrojs/markdown-satteri';
 import basePathHastPlugin from './scripts/markdown-base-path.mjs';
 import { lastmodSerializer } from './scripts/sitemap-lastmod.mjs';
+import { externalPostPaths } from './scripts/external-posts.mjs';
 
 // 저장소 이름·아이디를 직접 적지 않습니다. GitHub Actions의 GITHUB_REPOSITORY(또는 SITE_URL)로 자동 계산됩니다.
 const { site, base } = resolveSiteAndBase();
+// 외부 행사 소식 글은 검색 제외(noindex)이므로 사이트맵에도 넣지 않습니다.
+const externalPaths = externalPostPaths();
+const basePrefix = String(base || '/').replace(/\/+$/, '');
 
 export default defineConfig({
   output: 'static',
@@ -24,8 +28,13 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      // 404와 QR 모음(운영 도구)은 검색 대상이 아니므로 사이트맵에서 뺍니다.
-      filter: (page) => !/\/(404|qr)\/?$/.test(page),
+      // 404와 QR 모음(운영 도구), 외부 행사 소식은 검색 대상이 아니므로 사이트맵에서 뺍니다.
+      filter: (page) => {
+        if (/\/(404|qr)\/?$/.test(page)) return false;
+        let pathname = new URL(page).pathname;
+        if (basePrefix && pathname.startsWith(basePrefix)) pathname = pathname.slice(basePrefix.length) || '/';
+        return !externalPaths.has(pathname.toLowerCase());
+      },
       // 글마다 마지막 수정일(lastmod)을 넣어 검색엔진이 새 글·바뀐 글을 먼저 다시 수집하게 합니다.
       serialize: lastmodSerializer(base),
     }),
