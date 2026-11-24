@@ -5,7 +5,7 @@ pubDate: 2026-11-24
 category: 생활 정보
 summary: 영등포농협 신도림지점에서 3개월 정기예탁금 특판 상품을 안내합니다. 해당 상품은 최고 4.3% 금리를 제공하며 한도 소진 시
   조기 종료됩니다. 자세한 가입 조건과 적용 금리는 영등포농협 신도림지점으로 문의해 주시기 바랍니다.
-thumbnail: /images/uploads/2611243.png
+thumbnail: /images/uploads/2611243.jpg
 originalUrl: https://cafe.naver.com/wooseongapt/551998
 draft: false
 publishedAt: 2026-11-24T06:56:15.537Z
