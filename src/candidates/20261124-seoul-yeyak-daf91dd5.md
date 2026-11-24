@@ -1,22 +1,22 @@
 ---
-decision: pending
-sourceId: seoul-yeyak:S260805113444491407
-sourceName: 서울 열린데이터광장 · 서울시 공공서비스예약 정보
-title: "[마포 스마트팜 체험관] 초록빛 미래농장 교육 &middot; 체험 프로그램 (어린이단체 및 기관)"
-eventDate: 2026-11-24
-eventLabel: 접수 마감
-eventLocation: 마포구 마포 스마트팜 체험관
-feeInfo: 무료
+decision: reject
+aiCheck: 🟢 광고성 낮음 — 지자체 공공 시설에서 무료로 진행되는 어린이 대상 교육 및 체험 프로그램입니다.
 originalUrl: https://yeyak.seoul.go.kr/web/reservation/selectReservView.do?rsv_svc_id=S260805113444491407
-collectedAt: 2026-11-24
-aiDone: true
-aiStatus: ✅ 11월 24일 11:32 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
+title: "[마포 스마트팜 체험관] 초록빛 미래농장 교육 &middot; 체험 프로그램 (어린이단체 및 기관)"
 summary: 마포구 마포 스마트팜 체험관에서 어린이단체 및 기관 대상 초록빛 미래농장 교육·체험 프로그램을 진행합니다. 본 프로그램은
   2026년 8월 10일부터 12월 3일까지 이용 가능하며 참가 비용은 무료입니다. 접수 마감일은 2026년 11월 24일까지로 서울시
   공공서비스예약 누리집을 통해 신청할 수 있습니다.
-aiCheck: 🟢 광고성 낮음 — 지자체 공공 시설에서 무료로 진행되는 어린이 대상 교육 및 체험 프로그램입니다.
+eventDate: 2026-11-24
+eventEndDate: 2026-11-24
+eventLabel: 접수 마감
+eventLocation: 마포구 마포 스마트팜 체험관
+feeInfo: 무료
+sourceName: 서울 열린데이터광장 · 서울시 공공서비스예약 정보
+aiStatus: ✅ 11월 24일 11:32 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
+sourceId: seoul-yeyak:S260805113444491407
+collectedAt: 2026-11-24
+aiDone: true
 ---
-
 ## 상세 정보
 - **일정**: 2026년 8월 10일 ~ 2026년 12월 3일 (접수 기간: 2026년 8월 10일 ~ 2026년 11월 24일)
 - **장소**: 마포구 마포 스마트팜 체험관
