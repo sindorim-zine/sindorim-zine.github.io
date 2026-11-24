@@ -143,7 +143,7 @@ async function screen(data, body, apiKey) {
     data.eventLocation && `장소: ${data.eventLocation}`,
     data.organizer && `주최: ${data.organizer}`,
     data.feeInfo && `요금: ${data.feeInfo}`,
-    data.sourceName && `정보 출처: ${data.sourceName}`,
+    data.sourceName && `자료 제공처(주최 아님, 주최 칸에 쓰지 말 것): ${data.sourceName}`,
     data.originalUrl && `공식 안내 주소: ${data.originalUrl}`,
   ].filter(Boolean);
   const sourceText = scrubPii([...facts, '', String(body || '')].join('\n')).slice(0, 12000);
@@ -158,7 +158,10 @@ async function screen(data, body, apiKey) {
   }
   if (!str(next.eventLabel) && dates.eventLabel) next.eventLabel = dates.eventLabel;
   if (!str(next.eventLocation) && dates.eventLocation) next.eventLocation = dates.eventLocation;
-  if (!str(next.organizer) && str(r.organizer)) next.organizer = str(r.organizer).slice(0, 80);
+  // 자료 제공처(서울 열린데이터광장 등)를 주최로 잘못 적는 경우는 버립니다.
+  const aiOrganizer = str(r.organizer);
+  const isSourceName = aiOrganizer && (aiOrganizer === str(data.sourceName) || /열린데이터광장|TourAPI|공공서비스예약 정보|KOPIS/.test(aiOrganizer));
+  if (!str(next.organizer) && aiOrganizer && !isSourceName) next.organizer = aiOrganizer.slice(0, 80);
   if (!str(next.feeInfo) && str(r.feeInfo)) next.feeInfo = str(r.feeInfo).slice(0, 80);
   next.aiCheck = aiCheckText(r.adRisk, str(r.adReason), adWordsIn(`${body}\n${next.title}\n${next.summary}`));
   next.aiDone = true;

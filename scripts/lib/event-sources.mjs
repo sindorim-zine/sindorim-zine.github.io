@@ -17,7 +17,19 @@ const NEAR_GU = ['구로구', '영등포구', '양천구', '금천구', '동작�
 const WINDOW_DAYS = 30; // 오늘부터 30일 안에 시작하는(또는 접수가 끝나는) 행사만
 const SEOUL_ROWS = Number(process.env.SEOUL_API_ROWS) || 1000; // 시험용(sample 키는 5건까지)
 
-const s = (v) => (v == null ? '' : String(v).trim());
+// 공공 API가 HTML 기호(&lt; &middot; 등)를 그대로 보내는 경우가 있어 글자로 바꿔 둡니다.
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', middot: '·', hellip: '…', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', ndash: '–', mdash: '—' };
+const decode = (t) =>
+  t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
+    if (e[0] === '#') {
+      const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : m;
+    }
+    return ENTITIES[e.toLowerCase()] ?? m;
+  });
+const s = (v) => (v == null ? '' : decode(decode(String(v))).trim()); // &amp;lt; 같은 이중 표기까지
+// '5000' → '5,000원' (숫자만 온 요금)
+const won = (t) => (/^\d[\d,]*$/.test(t) ? `${Number(t.replaceAll(',', '')).toLocaleString('ko-KR')}원` : t);
 const hash = (v) => createHash('sha1').update(String(v)).digest('hex').slice(0, 10);
 
 /** '2027-02-12 00:00:00.0' · '20270212' · '2027.02.12' → '2027-02-12' */
@@ -98,7 +110,7 @@ async function seoulCulture({ key, today, until }) {
         eventLabel: end && end > start ? '행사 기간' : '행사일',
         eventLocation: [s(r.GUNAME), s(r.PLACE)].filter(Boolean).join(' '),
         organizer: s(r.ORG_NAME) === '기타' ? '' : s(r.ORG_NAME),
-        feeInfo: s(r.USE_FEE) || s(r.IS_FREE),
+        feeInfo: won(s(r.USE_FEE) || s(r.IS_FREE)),
         originalUrl: url,
         body: lines([
           ['분류', category],
@@ -116,7 +128,7 @@ async function seoulCulture({ key, today, until }) {
         _score: nearScore(r.GUNAME) + (free ? 1 : 0) + (/축제/.test(category) ? 2 : /교육|체험/.test(category) ? 1 : 0),
       };
     })
-    .filter((e) => e.title && e._start && e._start >= today && e._start <= until);
+    .filter((e) => e.title && e._start && e._start > today && e._start <= until);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -165,7 +177,7 @@ async function seoulReservation({ key, today, until }) {
         _score: nearScore(r.AREANM) + (free ? 1 : 0),
       };
     })
-    .filter((e) => e.title && e._start && e._start >= today && e._start <= until)
+    .filter((e) => e.title && e._start && e._start >= addDays(today, 2) && e._start <= until)
     // 지금 접수 중이거나 2주 안에 접수가 시작되는 프로그램만
     .filter((e) => /접수중/.test(e._status) || (e._rcptStart && e._rcptStart >= today && e._rcptStart <= soon));
 }
@@ -208,7 +220,7 @@ async function tourFestival({ key, today, until }) {
         _score: nearScore(addr) + 2,
       };
     })
-    .filter((e) => e.title && e._start && e._start >= today && e._start <= until);
+    .filter((e) => e.title && e._start && e._start > today && e._start <= until);
   return picked;
 }
 
@@ -279,7 +291,7 @@ async function kopis({ key, today, until }) {
       });
     }
   }
-  return out.filter((e) => e.title && e._start && e._start >= today && e._start <= until);
+  return out.filter((e) => e.title && e._start && e._start > today && e._start <= until);
 }
 
 async function enrichKopis(item, key) {
@@ -325,9 +337,10 @@ export async function collectEvents({ today, log, limit, isKnown }) {
       const seenTitles = new Set();
       const items = (await source.run({ key, today, until }))
         .filter((e) => !isKnown(e))
-        // 같은 행사가 여러 줄로 나오는 경우(회차별 등) 제목+시작일로 한 번만
+        // 같은 프로그램이 회차별로 여러 줄 나오는 경우 제목 기준으로 한 번만 (가장 가까운 날짜)
+        .sort((a, b) => a._start.localeCompare(b._start))
         .filter((e) => {
-          const k = `${e.title}|${e._start}`;
+          const k = e.title.replace(/\s+/g, ' ');
           if (seenTitles.has(k)) return false;
           seenTitles.add(k);
           return true;
