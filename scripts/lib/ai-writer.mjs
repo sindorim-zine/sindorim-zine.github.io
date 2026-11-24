@@ -93,7 +93,7 @@ export function cleanEventDates({ eventDate, eventEndDate, eventLabel, eventLoca
   return { eventDate: start, ...(end ? { eventEndDate: end } : {}), eventLabel: label, ...(location ? { eventLocation: location } : {}) };
 }
 
-export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, eventLocation, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body, external = false, organizer, sourceName, feeInfo }) {
+export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, eventEndDate, eventLabel, eventLocation, category, summary, pinned = false, draft = false, thumbnail, originalUrl, body, external = false, organizer, sourceName, feeInfo, sourceGuid }) {
   const lines = [
     '---',
     `title: ${JSON.stringify(title)}`,
@@ -110,6 +110,7 @@ export function buildPostMarkdown({ title, pubDate, publishedAt, eventDate, even
   ];
   if (thumbnail) lines.push(`thumbnail: ${JSON.stringify(thumbnail)}`);
   if (originalUrl) lines.push(`originalUrl: ${JSON.stringify(originalUrl)}`);
+  if (sourceGuid) lines.push(`sourceGuid: ${JSON.stringify(sourceGuid)}`);
   if (external) {
     lines.push('external: true');
     if (organizer) lines.push(`organizer: ${JSON.stringify(organizer)}`);

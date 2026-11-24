@@ -35,6 +35,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 20 # IndexNow가 이번 push로 바뀐 글을 정확히 찾도록 최근 기록을 함께 받음
+          # 실행을 시작시킨 '그 시점'의 기록이 아니라 지금의 최신 main을 받습니다.
+          # CMS에서 연달아 저장하면 실행이 줄을 서는데, 앞 실행이 올린 결과(공개된 글·지운 후보)를
+          # 뒤 실행이 모른 채 같은 글을 한 번 더 발행하던 문제를 막습니다.
+          ref: main
 
       - name: Node.js 준비
         uses: actions/setup-node@v7

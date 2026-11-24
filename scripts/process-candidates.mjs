@@ -120,6 +120,26 @@ async function publishedUrls() {
   return urls;
 }
 
+/**
+ * 이 후보가 이미 글로 공개됐는지 찾습니다. (CMS에서 짧은 간격으로 여러 번 저장해 처리가 겹쳐도 두 번 발행하지 않도록)
+ * 같은 수집 번호(sourceGuid) → 같은 공식 안내 주소 → 같은 제목·같은 날짜의 외부 행사 순서로 비교합니다.
+ */
+async function findPublished(data) {
+  if (!existsSync(POSTS_DIR)) return null;
+  const sourceId = str(data.sourceId);
+  const url = str(data.originalUrl) ? normalizeUrl(str(data.originalUrl)) : '';
+  const title = str(data.title).replace(/\s+/g, ' ');
+  const date = day(data.eventDate);
+  for (const file of await readdir(POSTS_DIR)) {
+    if (!file.endsWith('.md')) continue;
+    const { data: post } = splitFrontmatter(await readFile(path.join(POSTS_DIR, file), 'utf8'));
+    if (sourceId && str(post.sourceGuid) === sourceId) return file;
+    if (url && post.originalUrl && normalizeUrl(String(post.originalUrl)) === url) return file;
+    if (post.external === true && title && str(post.title).replace(/\s+/g, ' ') === title && day(post.eventDate) === date) return file;
+  }
+  return null;
+}
+
 function uniquePostFilename(base) {
   let name = `${base}.md`;
   let n = 2;
@@ -194,6 +214,7 @@ function publishPost(data, body) {
     organizer: str(data.organizer),
     sourceName: str(data.sourceName) || '운영진 제보',
     feeInfo: str(data.feeInfo),
+    sourceGuid: str(data.sourceId),
   });
   return { filename, markdown };
 }
@@ -293,6 +314,13 @@ async function main() {
         data.decision = 'pending';
         data.aiStatus = `⚠️ ${stamp()} 제목과 3줄 요약이 있어야 공개할 수 있습니다. 두 칸을 채운 뒤 다시 '✅ 공개'로 저장해 주세요.`;
         await writeFile(full, serialize(data, body), 'utf8');
+        continue;
+      }
+      const already = await findPublished(data);
+      if (already) {
+        await unlink(full);
+        if (key) seen[key] = today;
+        log(`이미 공개된 글이 있어 다시 발행하지 않음: ${file} → src/content/posts/${already}`);
         continue;
       }
       const { filename, markdown } = publishPost(data, body);
