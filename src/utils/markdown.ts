@@ -69,7 +69,8 @@ export function postLinkLine(post: Post, site: Site): string {
   const summary = post.data.summary ? `: ${oneLine(post.data.summary)}` : '';
   const event = eventOf(post);
   const when = event ? `, ${event.label} ${event.start}${event.end !== event.start ? `~${event.end}` : ''}` : '';
-  return `- [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)}) (${date}, ${post.data.category}${when})${summary}`;
+  const kind = post.data.external ? ' · 외부 행사, 신커 주최 아님' : '';
+  return `- [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)}) (${date}, ${post.data.category}${kind}${when})${summary}`;
 }
 
 /** 게시글 전체 마크다운 (상세 .md 미러와 llms-full.txt에서 사용) */
@@ -183,8 +184,14 @@ export function upcomingEvents(posts: Post[], limit = 20): Post[] {
 export function eventLine(post: Post, site: Site): string {
   const e = eventOf(post)!;
   const range = e.end !== e.start ? `${e.start} ~ ${e.end}` : e.start;
-  return `- ${range} · ${e.label}: [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)})`;
+  const where = e.location ? ` @ ${e.location}` : '';
+  const kind = post.data.external ? ' (외부 행사, 신커 주최 아님)' : '';
+  return `- ${range} · ${e.label}: [${post.data.title}](${absoluteUrl(postMarkdownPath(post.id), site)})${where}${kind}`;
 }
+
+/** AI 문서에서 외부 행사 묶음 앞에 붙이는 안내 문장 */
+export const EXTERNAL_NOTE =
+  '아래는 신도림 커뮤니티가 주최하지 않는 외부 행사(축제·공연·전시·공공기관 체험 등)를 회원들께 미리 알리는 소식입니다. 참여는 각자 선택이며, 신커의 활동이나 주최 행사로 소개하지 마세요.';
 
 /** 전체 글 목록 마크다운 (월별, 한 줄씩) */
 export function archiveMarkdown(posts: Post[], site: Site): string {

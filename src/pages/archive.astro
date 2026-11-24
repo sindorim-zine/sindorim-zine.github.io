@@ -63,8 +63,9 @@ const dayLabel = (d: Date) => {
                     <span class="flex flex-wrap items-center gap-1.5">
                       {post.data.pinned && <span class="chip chip-pinned"><Icon name="pin" size={11} />중요</span>}
                       <span class="chip">{post.data.category}</span>
+                      {post.data.external && <span class="chip chip-external" title="신도림 커뮤니티가 주최하지 않는 외부 행사 소식입니다">외부 행사</span>}
                     </span>
-                    <span class="mt-1 block font-heading font-bold leading-snug group-hover:text-accent">{post.data.title}</span>
+                    <span class="title-readable mt-1 block leading-snug group-hover:text-accent">{post.data.title}</span>
                     {event && <span class="mt-0.5 block text-xs text-muted">📅 {formatEvent(event)}</span>}
                   </span>
                 </a>
