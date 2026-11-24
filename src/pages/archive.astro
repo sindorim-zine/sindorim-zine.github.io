@@ -28,7 +28,7 @@ const dayLabel = (d: Date) => {
 };
 ---
 <BaseLayout
-  title="전체 글 목록"
+  title="전체 글 목록 — 신커 소식·봉사·행사 모음"
   description={`${siteConfig.siteTitle}에 올라온 모든 소식을 월별로 모아 보는 목록입니다. 총 ${posts.length}개의 글이 있습니다.`}
   markdownPath="/archive.md"
   jsonLd={[breadcrumbSchema([{ name: '홈', path: '/' }, { name: '전체 글 목록', path: '/archive/' }], Astro.site)]}

@@ -23,9 +23,19 @@ const organizer = (post.data.organizer ?? '').trim();
 const sourceName = (post.data.sourceName ?? '').trim();
 const feeInfo = (post.data.feeInfo ?? '').trim();
 const officialUrl = external && isHttpUrl(originalUrl) ? originalUrl : '';
+const event = eventOf(post);
+// 검색 결과 제목(<title>)이 너무 짧으면(예: '광화문 마켓') 검색엔진이 '제목이 너무 짧음'으로 봅니다.
+// 화면의 큰 제목은 그대로 두고, 짧은 제목에만 날짜·장소(외부 행사) 또는 카테고리를 덧붙입니다.
+const md = (day: string) => `${Number(day.slice(5, 7))}월 ${Number(day.slice(8, 10))}일`;
+const placeShort = (event?.location ?? '').split(/[,(]/)[0].trim().slice(0, 16);
+const seoTitle =
+  [...title].length >= 20
+    ? title
+    : event
+      ? `${title} — ${md(event.start)}${event.end !== event.start ? `~${md(event.end)}` : ''}${placeShort ? ` ${placeShort}` : ''}`
+      : `${title} · ${category}`;
 const thumb = thumbnailOf(post);
 const thumbInBody = !!thumb && (post.body ?? '').includes(thumb);
-const event = eventOf(post);
 const summaryLines = splitSummary(summary);
 const sourceUrl = isHttpUrl(originalUrl) ? originalUrl : siteConfig.cafeUrl;
 const jsonLd = [
@@ -41,7 +51,7 @@ const jsonLd = [
 ];
 ---
 <BaseLayout
-  title={title}
+  title={seoTitle}
   description={summary || siteConfig.siteDescription}
   image={thumb}
   type="article"
