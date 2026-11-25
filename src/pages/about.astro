@@ -169,7 +169,10 @@ const activityIntro = paragraphsOf(about.activitiesIntro);
                 <span><span class="mr-1.5 text-accent">Q.</span>{faq.question}</span>
                 <span class="faq-icon grid h-7 w-7 shrink-0 place-items-center rounded-full bg-subtle text-muted"><Icon name="plus" size={16} /></span>
               </summary>
-              <p class="border-t border-line px-5 py-4 leading-relaxed text-muted">{faq.answer}</p>
+              {/* 답변에 빈 줄로 나눈 문단이 있으면 문단별로 보여 줍니다(한 덩어리로 붙지 않게). */}
+              <div class="space-y-3 border-t border-line px-5 py-4 leading-relaxed text-muted">
+                {paragraphsOf(faq.answer).map((p) => <p>{p}</p>)}
+              </div>
             </details>
           ))}
         </div>
