@@ -30,7 +30,7 @@ export default defineConfig({
     sitemap({
       // 404와 QR 모음(운영 도구), 외부 행사 소식은 검색 대상이 아니므로 사이트맵에서 뺍니다.
       filter: (page) => {
-        if (/\/(404|qr)\/?$/.test(page)) return false;
+        if (/\/(404|qr|staff)\/?$/.test(page)) return false;
         let pathname = new URL(page).pathname;
         if (basePrefix && pathname.startsWith(basePrefix)) pathname = pathname.slice(basePrefix.length) || '/';
         return !externalPaths.has(pathname.toLowerCase());

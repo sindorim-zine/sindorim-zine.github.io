@@ -1,0 +1,62 @@
+---
+// 운영진 전용: 외부 행사 정보 찾는 곳 (/staff/)
+// Pages CMS의 '📌 외부 행사 정보 찾는 곳'(src/data/eventSources.json) 목록을 누르면 바로 열리는 링크로 보여 줍니다.
+// Pages CMS 입력 칸의 주소는 눌러서 열 수 없어서 만든 페이지입니다. 운영 도구라 검색 결과·사이트 메뉴에는 내보내지 않습니다(noindex).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import sourcesJson from '../../data/eventSources.json';
+import { isHttpUrl, withBase } from '../../utils/url';
+
+type Site = { category: string; name: string; url: string; note: string };
+const raw = sourcesJson as { guide?: string; sites?: Partial<Site>[] };
+const sites: Site[] = (Array.isArray(raw.sites) ? raw.sites : [])
+  .map((s) => ({ category: String(s.category ?? '기타').trim() || '기타', name: String(s.name ?? '').trim(), url: String(s.url ?? '').trim(), note: String(s.note ?? '').trim() }))
+  .filter((s) => s.name && isHttpUrl(s.url));
+
+// 분류 순서: CMS 선택지 순서, 목록에 새 분류가 생기면 뒤에 붙입니다.
+const ORDER = ['우리 동네', '서울·전국 행사', '전시장·박람회', '팝업·브랜드', '체험·교육·모집', '봉사', '기타'];
+const categories = [...new Set([...ORDER, ...sites.map((s) => s.category)])].filter((c) => sites.some((s) => s.category === c));
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+};
+const CMS_URL = 'https://app.pagescms.org';
+---
+<BaseLayout title="외부 행사 정보 찾는 곳 (운영진용)" description="신도림 커뮤니티 운영진이 외부 행사 소식을 찾아볼 때 쓰는 참고 사이트 모음입니다." noindex>
+  <section class="container-page py-14 md:py-20">
+    <p class="eyebrow">운영진 전용</p>
+    <h1 class="mt-3 text-3xl font-bold sm:text-4xl">외부 행사 정보 찾는 곳</h1>
+    <p class="mt-4 max-w-2xl leading-relaxed text-muted">
+      사이트 이름을 누르면 새 창으로 바로 열려요. 회원들께 알릴 만한 행사를 찾으면
+      Pages CMS의 <strong class="text-ink">🔎 외부 행사 후보 검토 · 제보</strong>에서 <strong class="text-ink">새로 만들기</strong> → 공식 안내 주소와 안내문을 붙여 넣고 '⏳ 검토 대기'로 저장하세요.
+    </p>
+    <div class="mt-5 flex flex-wrap gap-2">
+      <a href={CMS_URL} target="_blank" rel="noopener noreferrer" class="btn btn-primary text-sm">Pages CMS 열기 <Icon name="external" size={14} /></a>
+      <a href={withBase('/')} class="btn btn-ghost text-sm">사이트 홈</a>
+    </div>
+    <p class="mt-3 text-xs text-muted">이 페이지를 휴대폰·PC 즐겨찾기에 추가해 두면 편해요. 목록은 Pages CMS '📌 외부 행사 정보 찾는 곳'에서 고치면 1~2분 뒤 여기에 반영됩니다.</p>
+
+    {categories.map((category) => (
+      <section class="mt-12" aria-labelledby={`cat-${category}`}>
+        <h2 id={`cat-${category}`} class="section-title mb-4">{category}</h2>
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sites.filter((s) => s.category === category).map((s) => (
+            <li>
+              <a href={s.url} target="_blank" rel="noopener noreferrer" class="card group flex h-full flex-col gap-2 p-5 transition hover:-translate-y-0.5">
+                <span class="flex items-start justify-between gap-3">
+                  <span class="title-readable text-[1.02rem] leading-snug group-hover:text-accent">{s.name}</span>
+                  <Icon name="external" size={15} class="mt-1 shrink-0 text-muted" />
+                </span>
+                <span class="text-xs text-accent">{hostOf(s.url)}</span>
+                {s.note && <span class="text-sm leading-relaxed text-muted">{s.note}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </section>
+</BaseLayout>
