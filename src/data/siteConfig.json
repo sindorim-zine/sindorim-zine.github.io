@@ -2,7 +2,7 @@
   "design": {
     "themePreset": "winter-navy",
     "heroStyle": "magazine-card",
-    "headingFont": "pen",
+    "headingFont": "hahmlet",
     "bodyFont": "pretendard",
     "defaultViewMode": "grid",
     "defaultSort": "newest"
