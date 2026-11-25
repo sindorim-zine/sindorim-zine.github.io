@@ -1,23 +1,23 @@
 ---
-decision: pending
-sourceId: tour-festival:2802077
-sourceName: 한국관광공사 TourAPI · 전국 행사·축제 정보
+decision: publish
+aiCheck: 🟢 광고성 낮음 — 정부 기관인 과학기술정보통신부가 주최하는 무료 공공 과학 체험 행사입니다.
+originalUrl: https://sgf.kosac.re.kr/sgf2026
 title: 2026 과학영재교육 페스티벌
+summary: 과학기술정보통신부가 주최하는 '2026 과학영재교육 페스티벌'이 2026년 12월 23일 한국과학기술회관에서 개최됩니다. 이번
+  행사는 어린이, 청소년, 학부모 등 누구나 무료로 참여할 수 있습니다. 현장에서는 과학 체험부스와 전시관, 스탬프 이벤트 등 다채로운
+  프로그램이 운영됩니다.
 eventDate: 2026-12-23
+eventEndDate: 2026-11-25
 eventLabel: 축제일
 eventLocation: 한국과학기술회관 B1F~1F
 organizer: 과학기술정보통신부
 feeInfo: 무료
-originalUrl: https://sgf.kosac.re.kr/sgf2026
+sourceName: 한국관광공사 TourAPI · 전국 행사·축제 정보
+aiStatus: ✅ 11월 25일 08:42 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
+sourceId: tour-festival:2802077
 collectedAt: 2026-11-25
 aiDone: true
-aiStatus: ✅ 11월 25일 08:42 AI 정리 완료 — 내용과 광고성 표시를 확인한 뒤 '✅ 공개' 또는 '🚫 제외'로 바꿔 저장하세요.
-summary: 과학기술정보통신부가 주최하는 '2026 과학영재교육 페스티벌'이 2026년 12월 23일 한국과학기술회관에서 개최됩니다. 이번
-  행사는 어린이, 청소년, 학부모 등 누구나 무료로 참여할 수 있습니다. 현장에서는 과학 체험부스와 전시관, 스탬프 이벤트 등 다채로운
-  프로그램이 운영됩니다.
-aiCheck: 🟢 광고성 낮음 — 정부 기관인 과학기술정보통신부가 주최하는 무료 공공 과학 체험 행사입니다.
 ---
-
 ## 행사 개요
 - 일시: 2026년 12월 23일 10:00~17:00
 - 장소: 한국과학기술회관 B1F~1F (서울특별시 강남구 테헤란로7길 22)
