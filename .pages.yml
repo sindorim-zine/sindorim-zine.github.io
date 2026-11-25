@@ -703,7 +703,7 @@ content:
             label: 분류
             type: select
             options:
-              values: [우리 동네, 서울·전국 행사, 팝업·브랜드, 체험·교육·모집, 봉사, 기타]
+              values: [우리 동네, 서울·전국 행사, 전시장·박람회, 팝업·브랜드, 체험·교육·모집, 봉사, 기타]
           - name: name
             label: 사이트 이름
             type: string
